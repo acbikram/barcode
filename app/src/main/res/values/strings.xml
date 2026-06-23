@@ -76,6 +76,24 @@
     <string name="export_count_format">%1$d record(s) will be exported</string>
     <string name="export_no_items_match">No records match this filter</string>
 
+    <!-- WiFi print -->
+    <string name="wifi_print">WiFi Print</string>
+    <string name="wifi_discover">Find PC on Network</string>
+    <string name="wifi_discovering">Searching for PCs…</string>
+    <string name="wifi_no_pc_found">No PC found. Make sure Price Tag app is open with WiFi receiver enabled.</string>
+    <string name="wifi_select_pc">Select PC</string>
+    <string name="wifi_send">Send to PC</string>
+    <string name="wifi_sending">Sending…</string>
+    <string name="wifi_done_format">✓ Printed %1$d item(s)</string>
+    <string name="wifi_failed_format">%1$d item(s) could not be resolved by the PC</string>
+    <string name="wifi_busy">PC is busy. Try again shortly.</string>
+    <string name="wifi_decision_title">Some Items Failed</string>
+    <string name="wifi_decision_message_format">%1$d item(s) ready to print, %2$d failed. Print the ready items?</string>
+    <string name="wifi_print_ready">Print Ready Items</string>
+    <string name="wifi_cancel_all">Cancel</string>
+    <string name="wifi_reset">Reset</string>
+    <string name="wifi_retry">Retry</string>
+
     <!-- Backup & Restore screen -->
     <string name="backup_restore">Backup &amp; Restore</string>
     <string name="backup_database">Backup Database</string>

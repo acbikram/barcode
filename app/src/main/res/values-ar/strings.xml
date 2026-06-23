@@ -76,6 +76,24 @@
     <string name="export_count_format">سيتم تصدير %1$d سجل</string>
     <string name="export_no_items_match">لا توجد سجلات مطابقة لهذا الفلتر</string>
 
+    <!-- طباعة عبر WiFi -->
+    <string name="wifi_print">طباعة عبر WiFi</string>
+    <string name="wifi_discover">البحث عن الحاسوب في الشبكة</string>
+    <string name="wifi_discovering">جاري البحث عن الحاسوب…</string>
+    <string name="wifi_no_pc_found">لم يتم العثور على حاسوب. تأكد من تشغيل برنامج الطباعة وتفعيل استقبال WiFi.</string>
+    <string name="wifi_select_pc">اختر الحاسوب</string>
+    <string name="wifi_send">إرسال إلى الحاسوب</string>
+    <string name="wifi_sending">جاري الإرسال…</string>
+    <string name="wifi_done_format">✓ تمت طباعة %1$d عنصر</string>
+    <string name="wifi_failed_format">تعذر على الحاسوب معالجة %1$d عنصر</string>
+    <string name="wifi_busy">الحاسوب مشغول. حاول مرة أخرى.</string>
+    <string name="wifi_decision_title">فشل بعض العناصر</string>
+    <string name="wifi_decision_message_format">%1$d عنصر جاهز للطباعة، %2$d فشل. هل تريد طباعة العناصر الجاهزة؟</string>
+    <string name="wifi_print_ready">طباعة العناصر الجاهزة</string>
+    <string name="wifi_cancel_all">إلغاء</string>
+    <string name="wifi_reset">إعادة تعيين</string>
+    <string name="wifi_retry">إعادة المحاولة</string>
+
     <!-- شاشة النسخ الاحتياطي والاستعادة -->
     <string name="backup_restore">نسخ احتياطي واستعادة</string>
     <string name="backup_database">نسخ احتياطي لقاعدة البيانات</string>
