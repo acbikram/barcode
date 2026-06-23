@@ -29,13 +29,7 @@ import com.industrial.barcodescanner.presentation.theme.SurfaceDark
 import com.industrial.barcodescanner.presentation.theme.SurfaceVariant
 import com.industrial.barcodescanner.utils.LanguageManager
 import com.industrial.barcodescanner.presentation.navigation.Screen
-import com.industrial.barcodescanner.presentation.theme.CyanAccent
-import com.industrial.barcodescanner.presentation.theme.ErrorRed
-import com.industrial.barcodescanner.presentation.theme.GreenAccent
-import com.industrial.barcodescanner.presentation.theme.SubtleGray
-import com.industrial.barcodescanner.presentation.theme.SurfaceDark
-import com.industrial.barcodescanner.presentation.theme.SurfaceVariant
-import com.industrial.barcodescanner.utils.LanguageManager
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
