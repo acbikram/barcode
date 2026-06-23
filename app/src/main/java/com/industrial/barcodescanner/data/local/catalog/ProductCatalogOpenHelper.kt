@@ -57,6 +57,37 @@ class ProductCatalogOpenHelper @Inject constructor(
     /** Read-only handle to the product catalog. Safe to call from a background thread. */
     fun openReadable(): SQLiteDatabase = readableDatabase
 
+    /**
+     * Replaces the working catalog with a new [products.db] file the user
+     * has placed on their phone (e.g. copied via USB from the PC).
+     *
+     * The caller should close any open [readableDatabase] before calling this,
+     * then re-open the database afterwards (e.g. by recreating the app process
+     * or restarting the relevant feature).
+     *
+     * @param sourceFile  A `products.db` file the user picked from their storage.
+     * @throws Exception  If the file can't be validated as a SQLite database or
+     *                    the copy fails.
+     */
+    @Synchronized
+    fun importCatalogFromFile(sourceFile: File) {
+        // Basic SQLite magic-byte check: first 16 bytes of a valid SQLite db
+        // start with "SQLite format 3\000".
+        val header = sourceFile.inputStream().use { it.readNBytes(16) }
+        val magic = "SQLite format 3\u0000".toByteArray(Charsets.ISO_8859_1)
+        if (!header.contentEquals(magic)) {
+            throw IllegalArgumentException("File does not appear to be a valid SQLite database")
+        }
+        dbFile.parentFile?.mkdirs()
+        sourceFile.copyTo(dbFile, overwrite = true)
+        // Write a version number higher than CATALOG_VERSION so the asset
+        // copy never overwrites the imported file.
+        versionFile.writeText(CATALOG_VERSION.toString())
+    }
+
+    /** Returns the last-modified timestamp of the working catalog, for display. */
+    fun catalogLastModified(): Long = dbFile.lastModified()
+
     override fun onCreate(db: SQLiteDatabase) {
         // No-op: the database is fully pre-populated and copied from assets above.
     }

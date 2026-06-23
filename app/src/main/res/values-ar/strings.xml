@@ -154,4 +154,12 @@
     <string name="language_system_default">لغة النظام</string>
     <string name="language_english">English (الإنجليزية)</string>
     <string name="language_arabic">العربية</string>
+
+    <!-- تحديث الكتالوج -->
+    <string name="catalog_update">كتالوج المنتجات</string>
+    <string name="catalog_last_updated_format">آخر تحديث: %1$s</string>
+    <string name="catalog_description">استيراد ملف products.db جديد من الحاسوب لتحديث كتالوج المنتجات المستخدم للبحث بالباركود.</string>
+    <string name="catalog_import_button">استيراد products.db من التخزين</string>
+    <string name="catalog_importing">جاري الاستيراد…</string>
+    <string name="catalog_import_success">تم تحديث الكتالوج بنجاح! أعد تشغيل التطبيق لتطبيق التغييرات.</string>
 </resources>

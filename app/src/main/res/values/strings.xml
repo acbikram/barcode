@@ -149,9 +149,16 @@
     <string name="data_management">Data Management</string>
     <string name="clear_all_records">Clear All Records</string>
     <string name="clear_all_records_confirm">This action cannot be undone. Are you sure?</string>
-    <string name="language">Language</string>
-    <string name="language_description">Choose the app\'s display language.</string>
+    <string name="language">Language</string>    <string name="language_description">Choose the app\'s display language.</string>
     <string name="language_system_default">System Default</string>
     <string name="language_english">English</string>
     <string name="language_arabic">العربية (Arabic)</string>
+
+    <!-- Catalog update -->
+    <string name="catalog_update">Product Catalog</string>
+    <string name="catalog_last_updated_format">Last updated: %1$s</string>
+    <string name="catalog_description">Import a new products.db file from your computer to update the product catalog used for barcode lookups.</string>
+    <string name="catalog_import_button">Import products.db from Storage</string>
+    <string name="catalog_importing">Importing…</string>
+    <string name="catalog_import_success">Catalog updated successfully! Restart the app to apply changes.</string>
 </resources>
