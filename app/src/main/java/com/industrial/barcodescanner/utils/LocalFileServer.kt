@@ -32,16 +32,6 @@ import java.net.Socket
  *  CATALOG PULL (TCP port from discovery reply):
  *    Phone → PC : "PTAGGDB1" (8 bytes)
  *    PC → Phone : LEN (4 big-endian) + products.db bytes
- */      {"type":"result","ready":N,"failed":[{row,pos,reason}…],
- *       "items":[{pos,eng,unit,copies,tag,status,reason}…],
- *       "sheets":[{tag,unit,copies,n_tags,items:[{pos,eng,unit,copies,price}…]}…],
- *       "retry_csv":"…"}
- *      {"type":"done","printed":N}
- *      {"type":"printed","printed":N,"failed_sheets":N}
- *      {"type":"error","message":"…"}
- *      {"type":"cancelled"}
- *    Phone → PC (only when result has ready>0 AND failures):
- *      {"decision":"print"} or {"decision":"cancel"}
  */
 object LocalFileServer {
 
