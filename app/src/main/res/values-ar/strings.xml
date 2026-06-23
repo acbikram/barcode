@@ -188,4 +188,12 @@
     <string name="catalog_import_button">استيراد products.db من التخزين</string>
     <string name="catalog_importing">جاري الاستيراد…</string>
     <string name="catalog_import_success_format">تم التحديث — %1$d منتج محمّل</string>
+
+    <!-- سحب الكتالوج عبر WiFi -->
+    <string name="catalog_wifi_pull_button">جلب أحدث كتالوج من الحاسوب (WiFi)</string>
+    <string name="catalog_wifi_discovering">جاري البحث عن الحاسوب…</string>
+    <string name="catalog_wifi_downloading">جاري تنزيل الكتالوج…</string>
+    <string name="catalog_wifi_success_format">✓ تم التحديث — %1$d منتج محمّل</string>
+    <string name="catalog_wifi_error_retry">إعادة المحاولة</string>
+    <string name="catalog_empty_hint">لم يتم تحميل أي كتالوج بعد. استخدم "جلب الكتالوج من الحاسوب" أو استورد ملف products.db.</string>
 </resources>

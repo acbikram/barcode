@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.industrial.barcodescanner.domain.repository.ProductCatalogRepository
 import com.industrial.barcodescanner.domain.repository.ScannedItemRepository
+import com.industrial.barcodescanner.utils.LocalFileServer
 import com.industrial.barcodescanner.utils.PreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -35,10 +36,14 @@ class SettingsViewModel @Inject constructor(
         val catalogImportState: CatalogImportState = CatalogImportState.IDLE,
         val catalogLastModified: String = "",
         val catalogItemCount: Int = 0,
-        val catalogError: String? = null
+        val catalogError: String? = null,
+        val wifiCatalogState: WifiCatalogState = WifiCatalogState.IDLE,
+        val wifiCatalogProgress: Float = 0f,   // 0..1
+        val wifiCatalogStatus: String = ""
     )
 
     enum class CatalogImportState { IDLE, IMPORTING, SUCCESS, ERROR }
+    enum class WifiCatalogState   { IDLE, DISCOVERING, DOWNLOADING, SUCCESS, ERROR }
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -106,6 +111,80 @@ class SettingsViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Discovers the PC on the LAN and pulls the catalog .db over
+     * the PTAGGDB1 protocol — no cable or manual file picking needed.
+     */
+    fun pullCatalogFromPc() {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    wifiCatalogState = WifiCatalogState.DISCOVERING,
+                    wifiCatalogProgress = 0f,
+                    wifiCatalogStatus = "Searching for PC…"
+                )
+            }
+            val pcs = LocalFileServer.discoverPcs()
+            if (pcs.isEmpty()) {
+                _uiState.update {
+                    it.copy(
+                        wifiCatalogState = WifiCatalogState.ERROR,
+                        wifiCatalogStatus = "No PC found. Make sure Price Tag app is open with WiFi receiver enabled."
+                    )
+                }
+                return@launch
+            }
+            val pc = pcs.first()
+            _uiState.update {
+                it.copy(
+                    wifiCatalogState = WifiCatalogState.DOWNLOADING,
+                    wifiCatalogStatus = "Downloading catalog from ${pc.name}…"
+                )
+            }
+            try {
+                val dbBytes = LocalFileServer.pullCatalogDb(
+                    pc = pc,
+                    onProgress = { received, total ->
+                        val pct = if (total > 0) received.toFloat() / total else 0f
+                        val mb = received / 1_048_576.0
+                        _uiState.update {
+                            it.copy(
+                                wifiCatalogProgress = pct,
+                                wifiCatalogStatus = "${"%.1f".format(mb)} MB received…"
+                            )
+                        }
+                    }
+                )
+                val itemCount = withContext(Dispatchers.IO) {
+                    val tmp = File(context.cacheDir, "products_wifi.db")
+                    tmp.writeBytes(dbBytes)
+                    val count = catalogRepository.importFromFile(tmp)
+                    tmp.delete()
+                    count
+                }
+                loadCatalogInfo()
+                _uiState.update {
+                    it.copy(
+                        wifiCatalogState = WifiCatalogState.SUCCESS,
+                        wifiCatalogStatus = "✓ Catalog updated — $itemCount products loaded",
+                        catalogItemCount = itemCount
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        wifiCatalogState = WifiCatalogState.ERROR,
+                        wifiCatalogStatus = e.message ?: "Download failed"
+                    )
+                }
+            }
+        }
+    }
+
+    fun resetWifiCatalogState() {
+        _uiState.update { it.copy(wifiCatalogState = WifiCatalogState.IDLE, wifiCatalogProgress = 0f, wifiCatalogStatus = "") }
     }
 
     fun resetCatalogImportState() {

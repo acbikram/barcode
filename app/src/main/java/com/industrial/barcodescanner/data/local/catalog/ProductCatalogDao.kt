@@ -10,46 +10,72 @@ import javax.inject.Singleton
 class ProductCatalogDao @Inject constructor(
     private val openHelper: ProductCatalogOpenHelper
 ) {
-
     private val columns = arrayOf("barcode", "pos_code", "name_en", "name_ar", "uom", "barcode_type")
 
     /**
-     * Looks up a scanned barcode in the bundled catalog.
+     * Looks up a scanned barcode in the catalog.
      *
-     * The source data contains a handful of duplicate barcodes (e.g. the
-     * same product listed once as "EA" - each/unit - and once as "CTN" -
-     * carton). When duplicates exist we prefer the "EA" entry since that's
-     * what a shopper actually scans off a single item.
+     * Strategy (mirrors Price_Tag_Final.py normalize_barcode logic):
+     *   1. Exact match — fastest, covers most cases.
+     *   2. Left-strip leading zeros then match — handles scanners that strip zeros.
+     *   3. Zero-pad to 13 digits then match — handles scanners that pad to EAN-13.
+     *
+     * When duplicates exist we prefer "EA" then "POS" entries (single-item
+     * barcodes) over carton/offer entries.
      */
     suspend fun findByBarcode(barcode: String): ProductCatalogEntry? = withContext(Dispatchers.IO) {
+        if (barcode.isBlank()) return@withContext null
+        if (openHelper.isEmpty()) return@withContext null
+
         val db = openHelper.openReadable()
-        db.query(
-            "products",
-            columns,
-            "barcode = ?",
-            arrayOf(barcode),
-            null,
-            null,
-            "CASE barcode_type WHEN 'EA' THEN 0 WHEN 'POS' THEN 1 WHEN 'CTN' THEN 2 ELSE 3 END",
-            "1"
-        ).use { cursor ->
-            if (cursor.moveToFirst()) cursor.toProductCatalogEntry() else null
+        val order = "CASE barcode_type WHEN 'EA' THEN 0 WHEN 'POS' THEN 1 WHEN 'CTN' THEN 2 ELSE 3 END"
+
+        // 1. Exact match
+        queryOne(db, barcode, order)?.let { return@withContext it }
+
+        // 2. Strip leading zeros (e.g. "0072714834561" → "72714834561")
+        val stripped = barcode.trimStart('0')
+        if (stripped.isNotEmpty() && stripped != barcode) {
+            queryOne(db, stripped, order)?.let { return@withContext it }
         }
+
+        // 3. Zero-pad to 13 digits (EAN-13 normalization)
+        if (barcode.length < 13 && barcode.all { it.isDigit() }) {
+            val padded = barcode.padStart(13, '0')
+            queryOne(db, padded, order)?.let { return@withContext it }
+        }
+
+        // 4. If the barcode has no leading zeros but the DB might store it padded
+        if (barcode.length in 1..12 && barcode.all { it.isDigit() }) {
+            for (len in 13 downTo barcode.length + 1) {
+                val padded = barcode.padStart(len, '0')
+                queryOne(db, padded, order)?.let { return@withContext it }
+            }
+        }
+
+        null
+    }
+
+    private fun queryOne(
+        db: android.database.sqlite.SQLiteDatabase,
+        barcode: String,
+        order: String
+    ): ProductCatalogEntry? {
+        return db.query("products", columns, "barcode = ?", arrayOf(barcode), null, null, order, "1")
+            .use { cursor -> if (cursor.moveToFirst()) cursor.toEntry() else null }
     }
 
     suspend fun countProducts(): Int = withContext(Dispatchers.IO) {
-        openHelper.openReadable().rawQuery("SELECT COUNT(*) FROM products", null).use { cursor ->
-            if (cursor.moveToFirst()) cursor.getInt(0) else 0
-        }
+        openHelper.countProducts()
     }
 
-    private fun Cursor.toProductCatalogEntry(): ProductCatalogEntry = ProductCatalogEntry(
-        barcode = getString(0),
-        posCode = getStringOrNull(1),
-        nameEn = getStringOrNull(2),
-        nameAr = getStringOrNull(3),
-        uom = getStringOrNull(4),
-        barcodeType = getStringOrNull(5)
+    private fun Cursor.toEntry(): ProductCatalogEntry = ProductCatalogEntry(
+        barcode      = getString(0),
+        posCode      = getStringOrNull(1),
+        nameEn       = getStringOrNull(2),
+        nameAr       = getStringOrNull(3),
+        uom          = getStringOrNull(4),
+        barcodeType  = getStringOrNull(5)
     )
 
     private fun Cursor.getStringOrNull(index: Int): String? =

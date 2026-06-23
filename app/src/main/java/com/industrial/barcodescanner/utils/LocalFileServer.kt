@@ -26,9 +26,13 @@ import java.net.Socket
  *
  *  CSV PUSH (TCP port from discovery reply):
  *    Phone → PC : "PTAGCSV1" (8) + LEN (4 big-endian) + CSV bytes
- *    PC → Phone : JSON lines:
- *      {"type":"busy"}
- *      {"type":"result","ready":N,"failed":[{row,pos,reason}…],
+ *    PC → Phone : JSON lines (result/done/printed/error/cancelled)
+ *    Phone → PC : {"decision":"print"} or {"decision":"cancel"} (if partial)
+ *
+ *  CATALOG PULL (TCP port from discovery reply):
+ *    Phone → PC : "PTAGGDB1" (8 bytes)
+ *    PC → Phone : LEN (4 big-endian) + products.db bytes
+ */      {"type":"result","ready":N,"failed":[{row,pos,reason}…],
  *       "items":[{pos,eng,unit,copies,tag,status,reason}…],
  *       "sheets":[{tag,unit,copies,n_tags,items:[{pos,eng,unit,copies,price}…]}…],
  *       "retry_csv":"…"}
@@ -44,6 +48,7 @@ object LocalFileServer {
     const val DISCOVERY_PORT  = 8765
     const val TCP_PORT        = 8765
     private val MAGIC_CSV     = "PTAGCSV1".toByteArray(Charsets.US_ASCII)
+    private val MAGIC_GDB     = "PTAGGDB1".toByteArray(Charsets.US_ASCII)
     private val DISCOVERY_REQ = "PTAGWHO1".toByteArray(Charsets.US_ASCII)
 
     fun getWifiIpAddress(context: Context): String? {
@@ -222,6 +227,64 @@ object LocalFileServer {
 
     fun cancelPreview(result: PushResult.Preview) = runCatching { result.sock.close() }
     fun cancelDecision(result: PushResult.NeedsDecision) = runCatching { result.sock.close() }
+
+    /**
+     * Pulls the product catalog (.db) from [pc] over the PTAGGDB1 protocol:
+     *
+     *   Phone → PC  : "PTAGGDB1" (8 bytes)
+     *   PC → Phone  : LEN (4 bytes big-endian) + .db bytes (LEN bytes)
+     *
+     * The PC generates the .db from the current master Excel file (cached;
+     * regenerated only when the master changes) and streams it back.
+     *
+     * Returns the raw bytes of the .db file, or throws on error.
+     */
+    suspend fun pullCatalogDb(
+        pc: PcInfo,
+        onProgress: (bytesReceived: Long, totalBytes: Long) -> Unit = { _, _ -> }
+    ): ByteArray = withContext(Dispatchers.IO) {
+        Socket(pc.ip, pc.port).use { sock ->
+            sock.soTimeout = 300_000   // 5 min — PC may need to regenerate the DB
+
+            val out = sock.getOutputStream()
+            val inp = sock.getInputStream()
+
+            // 1. Send magic
+            out.write(MAGIC_GDB)
+            out.flush()
+
+            // 2. Receive LEN (4 bytes big-endian)
+            val lenBytes = ByteArray(4)
+            var read = 0
+            while (read < 4) {
+                val n = inp.read(lenBytes, read, 4 - read)
+                if (n < 0) throw IOException("Connection closed before length received")
+                read += n
+            }
+            val totalLen = ((lenBytes[0].toInt() and 0xFF) shl 24) or
+                           ((lenBytes[1].toInt() and 0xFF) shl 16) or
+                           ((lenBytes[2].toInt() and 0xFF) shl 8)  or
+                            (lenBytes[3].toInt() and 0xFF)
+
+            if (totalLen <= 0 || totalLen > 100 * 1024 * 1024) {
+                throw IOException("Invalid catalog size from PC: $totalLen bytes")
+            }
+
+            // 3. Receive .db bytes
+            val buf = ByteArray(65536)
+            val baos = ByteArrayOutputStream(totalLen)
+            var received = 0L
+            while (received < totalLen) {
+                val toRead = minOf(buf.size.toLong(), totalLen - received).toInt()
+                val n = inp.read(buf, 0, toRead)
+                if (n < 0) throw IOException("Connection dropped after $received / $totalLen bytes")
+                baos.write(buf, 0, n)
+                received += n
+                onProgress(received, totalLen.toLong())
+            }
+            baos.toByteArray()
+        }
+    }
 
     fun buildCsvBytes(items: List<com.industrial.barcodescanner.domain.model.ScannedItem>): ByteArray {
         val csvStream = ByteArrayOutputStream()

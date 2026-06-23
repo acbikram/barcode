@@ -187,4 +187,12 @@
     <string name="catalog_import_button">Import products.db from Storage</string>
     <string name="catalog_importing">Importing…</string>
     <string name="catalog_import_success_format">Catalog updated — %1$d products loaded</string>
+
+    <!-- WiFi catalog pull -->
+    <string name="catalog_wifi_pull_button">Get Latest Catalog from PC (WiFi)</string>
+    <string name="catalog_wifi_discovering">Searching for PC…</string>
+    <string name="catalog_wifi_downloading">Downloading catalog…</string>
+    <string name="catalog_wifi_success_format">✓ Catalog updated — %1$d products loaded</string>
+    <string name="catalog_wifi_error_retry">Retry</string>
+    <string name="catalog_empty_hint">No catalog loaded yet. Use "Get Latest Catalog from PC" or import a products.db file.</string>
 </resources>
