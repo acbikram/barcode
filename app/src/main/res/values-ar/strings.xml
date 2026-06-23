@@ -1,0 +1,191 @@
+<resources>
+    <string name="app_name">باركود إلى CSV</string>
+    <string name="permission_camera_rationale">إذن الكاميرا مطلوب لمسح الباركود.</string>
+
+    <!-- عام -->
+    <string name="ok">حسناً</string>
+    <string name="cancel">إلغاء</string>
+    <string name="save">حفظ</string>
+    <string name="delete">حذف</string>
+    <string name="edit">تعديل</string>
+    <string name="confirm">تأكيد</string>
+    <string name="clear">مسح</string>
+    <string name="retry">إعادة المحاولة</string>
+    <string name="done">تم</string>
+
+    <!-- شريط التنقل السفلي -->
+    <string name="scan">مسح</string>
+    <string name="home">الرئيسية</string>
+    <string name="history">السجل</string>
+    <string name="export">تصدير</string>
+    <string name="settings">الإعدادات</string>
+
+    <!-- حقول بطاقة الصنف المشتركة -->
+    <string name="item_code_format">رمز الصنف: %1$s</string>
+    <string name="barcode_format">الباركود: %1$s</string>
+    <string name="tag_type_format">نوع البطاقة: %1$s</string>
+    <string name="unit_type_format">الوحدة: %1$s</string>
+    <string name="copies_format">النسخ: %1$d</string>
+    <string name="scanned_format">تم المسح: %1$s</string>
+
+    <!-- الشاشة الرئيسية -->
+    <string name="app_title_header">باركود إلى CSV</string>
+    <string name="developed_by">تم التطوير بواسطة </string>
+    <string name="dashboard">لوحة التحكم</string>
+    <string name="total_records">إجمالي السجلات</string>
+    <string name="unique_products">المنتجات الفريدة</string>
+    <string name="total_copies">إجمالي النسخ</string>
+    <string name="tag_type_breakdown">حسب نوع البطاقة</string>
+    <string name="unit_type_breakdown">حسب نوع الوحدة</string>
+    <string name="recent_scans">آخر المسحات</string>
+    <string name="no_recent_items">لا توجد عناصر حديثة</string>
+
+    <!-- شاشة السجل -->
+    <string name="sort">ترتيب</string>
+    <string name="search_by_name_or_barcode">البحث بالاسم أو الباركود</string>
+    <string name="sort_items_summary_format">الترتيب: %1$s  •  %2$d عنصر</string>
+    <string name="no_items_found">لا توجد عناصر</string>
+    <string name="sort_newest">الأحدث</string>
+    <string name="sort_oldest">الأقدم</string>
+    <string name="sort_copies">عدد النسخ</string>
+    <string name="filter_all">الكل</string>
+
+    <!-- تحديد وحذف من السجل -->
+    <string name="select_items">تحديد العناصر</string>
+    <string name="items_selected_format">تم تحديد %1$d</string>
+    <string name="select_all">تحديد الكل</string>
+    <string name="delete_selected">حذف المحدد</string>
+    <string name="delete_selected_confirm_format">حذف %1$d عنصر محدد؟ لا يمكن التراجع عن هذا.</string>
+    <string name="delete_filtered_format">حذف %1$d عنصر في هذا الفلتر</string>
+    <string name="delete_filtered_confirm_format">حذف جميع %1$d عنصر في هذا الفلتر؟ لا يمكن التراجع عن هذا.</string>
+
+    <!-- شاشة التصدير -->
+    <string name="export_data">تصدير البيانات</string>
+    <string name="export_all_records_csv">تصدير جميع السجلات كملف CSV</string>
+    <string name="total_records_count_format">إجمالي السجلات: %1$d</string>
+    <string name="save_csv">حفظ ملف CSV</string>
+    <string name="share_csv">مشاركة ملف CSV</string>
+    <string name="exporting">جاري التصدير…</string>
+    <string name="export_successful">تم التصدير بنجاح</string>
+    <string name="export_selected_only">تصدير البيانات المحددة فقط</string>
+    <string name="export_by_filter">حسب نوع البطاقة/الوحدة</string>
+    <string name="export_by_items">تحديد العناصر</string>
+    <string name="export_filter_by_tag">تصفية حسب نوع البطاقة</string>
+    <string name="export_filter_by_unit">تصفية حسب نوع الوحدة</string>
+    <string name="export_reset_filters">إعادة تعيين</string>
+    <string name="export_count_format">سيتم تصدير %1$d سجل</string>
+    <string name="export_no_items_match">لا توجد سجلات مطابقة لهذا الفلتر</string>
+
+    <!-- طباعة عبر WiFi -->
+    <string name="wifi_print">طباعة عبر WiFi</string>
+    <string name="wifi_discover">البحث عن الحاسوب</string>
+    <string name="wifi_discovering">جاري البحث…</string>
+    <string name="wifi_no_pc_found">لم يتم العثور على حاسوب. تأكد من تشغيل برنامج الطباعة وتفعيل استقبال WiFi.</string>
+    <string name="wifi_select_pc">اختر الحاسوب</string>
+    <string name="wifi_send">إرسال إلى الحاسوب</string>
+    <string name="wifi_sending">جاري الإرسال…</string>
+    <string name="wifi_done_format">✓ تمت طباعة %1$d صفحة</string>
+    <string name="wifi_busy">الحاسوب مشغول. حاول مرة أخرى.</string>
+    <string name="wifi_reset">إعادة تعيين</string>
+    <string name="wifi_retry">إعادة المحاولة</string>
+    <string name="wifi_cancel">إلغاء</string>
+
+    <!-- معاينة قبل الطباعة -->
+    <string name="preview_title">معاينة قبل الطباعة</string>
+    <string name="preview_ready_format">%1$d عنصر جاهز للطباعة</string>
+    <string name="preview_col_item_code">رمز الصنف</string>
+    <string name="preview_col_description">الوصف</string>
+    <string name="preview_col_price">السعر</string>
+    <string name="preview_col_copies">النسخ</string>
+    <string name="preview_print">طباعة</string>
+    <string name="preview_cancel">إلغاء</string>
+
+    <!-- نافذة الأخطاء -->
+    <string name="error_dialog_title">فشل بعض العناصر</string>
+    <string name="error_ready_format">%1$d عنصر جاهز</string>
+    <string name="error_failed_format">%1$d عنصر فشل</string>
+    <string name="error_failed_items_header">العناصر الفاشلة</string>
+    <string name="error_reason_format">صف %1$d: %2$s — %3$s</string>
+    <string name="error_cancel_all">إلغاء المهمة كلها</string>
+    <string name="error_print_ready">طباعة العناصر الجاهزة فقط</string>
+
+    <!-- سجل الطباعة -->
+    <string name="print_history">سجل مهام الطباعة</string>
+    <string name="print_history_short">الطباعة</string>
+    <string name="print_history_empty">لا توجد مهام طباعة بعد.</string>
+    <string name="print_jobs">مهمة</string>
+    <string name="print_job_sheets_format">%1$d صفحة</string>
+    <string name="print_job_items_format">%1$d عنصر</string>
+    <string name="print_job_delete_confirm">حذف مهمة الطباعة هذه من السجل؟</string>
+    <string name="reprint">إعادة الطباعة</string>
+
+    <!-- شاشة النسخ الاحتياطي والاستعادة -->
+    <string name="backup_restore">نسخ احتياطي واستعادة</string>
+    <string name="backup_database">نسخ احتياطي لقاعدة البيانات</string>
+    <string name="restore_database">استعادة قاعدة البيانات</string>
+    <string name="processing">جاري المعالجة…</string>
+    <string name="operation_successful">تمت العملية بنجاح</string>
+
+    <!-- شاشة التفاصيل -->
+    <string name="item_details">تفاصيل الصنف</string>
+    <string name="save_changes">حفظ التغييرات</string>
+    <string name="delete_item">حذف الصنف</string>
+    <string name="delete_item_confirm">هل أنت متأكد من حذف هذا الصنف؟</string>
+
+    <!-- نوافذ اختيار نوع البطاقة / الوحدة / النسخ -->
+    <string name="select_tag_type">اختر نوع البطاقة</string>
+    <string name="select_unit_type">اختر نوع الوحدة</string>
+    <string name="select_copies">اختر عدد النسخ</string>
+    <string name="auto_select_in_format">يتم الاختيار تلقائياً بعد %1$d ث</string>
+    <string name="tag_type_label">نوع البطاقة</string>
+    <string name="unit_type_label">نوع الوحدة</string>
+    <string name="copies_label">عدد النسخ</string>
+
+    <!-- نافذة الصنف المكرر -->
+    <string name="same_item_found">تم العثور على الصنف نفسه</string>
+    <string name="previous_copies">النسخ السابقة: </string>
+    <string name="new_copies">النسخ الجديدة: </string>
+    <string name="final_copies">النسخ النهائية: </string>
+    <string name="confirm_save_question">تأكيد الحفظ؟</string>
+
+    <!-- شاشة المسح -->
+    <string name="camera_permission_required">إذن الكاميرا مطلوب</string>
+    <string name="grant_permission">منح الإذن</string>
+    <string name="no_recent_scans">لا توجد عمليات مسح حديثة</string>
+    <string name="delete_scan_confirm">هل أنت متأكد من حذف سجل المسح هذا؟</string>
+    <string name="manual_entry">إدخال يدوي</string>
+    <string name="barcode_label">الباركود</string>
+    <string name="please_enter_barcode">يرجى إدخال الباركود</string>
+    <string name="edit_item">تعديل الصنف</string>
+    <string name="manual_mode_enter">إدخال الباركود يدوياً</string>
+    <string name="manual_mode_exit">الخروج من الإدخال اليدوي</string>
+    <string name="failed_to_start_camera_format">فشل تشغيل الكاميرا: %1$s</string>
+
+    <!-- طبقة الكاميرا غير النشطة -->
+    <string name="detected_enter_details">تم الكشف • أدخل التفاصيل</string>
+    <string name="press_to_start_scan">اضغط لبدء المسح</string>
+
+    <!-- شاشة الإعدادات -->
+    <string name="scan_settings">إعدادات المسح</string>
+    <string name="beep_on_scan">صوت تنبيه عند المسح</string>
+    <string name="beep_on_scan_subtitle">تشغيل صوت قصير عند اكتشاف الباركود</string>
+    <string name="vibrate_on_scan">الاهتزاز عند المسح</string>
+    <string name="vibrate_on_scan_subtitle">يهتز الهاتف عند اكتشاف الباركود</string>
+    <string name="data_management">إدارة البيانات</string>
+    <string name="clear_all_records">مسح جميع السجلات</string>
+    <string name="clear_all_records_confirm">لا يمكن التراجع عن هذا الإجراء. هل أنت متأكد؟</string>
+    <string name="language">اللغة</string>
+    <string name="language_description">اختر لغة عرض التطبيق.</string>
+    <string name="language_system_default">لغة النظام</string>
+    <string name="language_english">English (الإنجليزية)</string>
+    <string name="language_arabic">العربية</string>
+
+    <!-- تحديث الكتالوج -->
+    <string name="catalog_update">كتالوج المنتجات</string>
+    <string name="catalog_last_updated_format">آخر تحديث: %1$s</string>
+    <string name="catalog_item_count_format">تم تحميل %1$d منتج</string>
+    <string name="catalog_description">استيراد ملف products.db جديد لتحديث الكتالوج فوراً بدون إعادة تشغيل.</string>
+    <string name="catalog_import_button">استيراد products.db من التخزين</string>
+    <string name="catalog_importing">جاري الاستيراد…</string>
+    <string name="catalog_import_success_format">تم التحديث — %1$d منتج محمّل</string>
+</resources>
