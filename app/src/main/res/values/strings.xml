@@ -1,0 +1,139 @@
+<resources>
+    <string name="app_name">Barcode To CSV</string>
+    <string name="permission_camera_rationale">Camera permission is needed to scan barcodes.</string>
+
+    <!-- Common -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="confirm">Confirm</string>
+    <string name="clear">Clear</string>
+    <string name="retry">Retry</string>
+    <string name="done">Done</string>
+
+    <!-- Bottom navigation -->
+    <string name="scan">Scan</string>
+    <string name="home">Home</string>
+    <string name="history">History</string>
+    <string name="export">Export</string>
+    <string name="settings">Settings</string>
+
+    <!-- Shared item-card fields -->
+    <string name="item_code_format">Item Code: %1$s</string>
+    <string name="barcode_format">Barcode: %1$s</string>
+    <string name="tag_type_format">Tag: %1$s</string>
+    <string name="unit_type_format">Unit: %1$s</string>
+    <string name="copies_format">Copies: %1$d</string>
+    <string name="scanned_format">Scanned: %1$s</string>
+
+    <!-- Home screen -->
+    <string name="app_title_header">BARCODE TO CSV</string>
+    <string name="developed_by">Developed by </string>
+    <string name="dashboard">Dashboard</string>
+    <string name="total_records">Total Records</string>
+    <string name="unique_products">Unique Products</string>
+    <string name="total_copies">Total Copies</string>
+    <string name="tag_type_breakdown">By Tag Type</string>
+    <string name="unit_type_breakdown">By Unit Type</string>
+    <string name="recent_scans">Recent Scans</string>
+    <string name="no_recent_items">No recent items</string>
+
+    <!-- History screen -->
+    <string name="sort">Sort</string>
+    <string name="search_by_name_or_barcode">Search by name or barcode</string>
+    <string name="sort_items_summary_format">Sort: %1$s  •  %2$d items</string>
+    <string name="no_items_found">No items found</string>
+    <string name="sort_newest">Newest</string>
+    <string name="sort_oldest">Oldest</string>
+    <string name="sort_copies">Copies</string>
+    <string name="filter_all">All</string>
+
+    <!-- History selection / delete -->
+    <string name="select_items">Select Items</string>
+    <string name="items_selected_format">%1$d selected</string>
+    <string name="select_all">Select All</string>
+    <string name="delete_selected">Delete Selected</string>
+    <string name="delete_selected_confirm_format">Delete %1$d selected item(s)? This cannot be undone.</string>
+    <string name="delete_filtered_format">Delete %1$d Item(s) In This Filter</string>
+    <string name="delete_filtered_confirm_format">Delete all %1$d item(s) matching this filter? This cannot be undone.</string>
+
+    <!-- Export screen -->
+    <string name="export_data">Export Data</string>
+    <string name="export_all_records_csv">Export all records to CSV</string>
+    <string name="total_records_count_format">Total records: %1$d</string>
+    <string name="save_csv">Save CSV</string>
+    <string name="share_csv">Share CSV</string>
+    <string name="exporting">Exporting…</string>
+    <string name="export_successful">Export successful</string>
+    <string name="export_selected_only">Export Selected Data Only</string>
+    <string name="export_by_filter">By Tag/Unit Type</string>
+    <string name="export_by_items">Select Items</string>
+    <string name="export_filter_by_tag">Filter by Tag Type</string>
+    <string name="export_filter_by_unit">Filter by Unit Type</string>
+    <string name="export_reset_filters">Reset</string>
+    <string name="export_count_format">%1$d record(s) will be exported</string>
+    <string name="export_no_items_match">No records match this filter</string>
+
+    <!-- Backup & Restore screen -->
+    <string name="backup_restore">Backup &amp; Restore</string>
+    <string name="backup_database">Backup Database</string>
+    <string name="restore_database">Restore Database</string>
+    <string name="processing">Processing…</string>
+    <string name="operation_successful">Operation successful</string>
+
+    <!-- Detail screen -->
+    <string name="item_details">Item Details</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="delete_item">Delete Item</string>
+    <string name="delete_item_confirm">Are you sure you want to delete this item?</string>
+
+    <!-- Tag / Unit / Copies picker dialogs -->
+    <string name="select_tag_type">Select Tag Type</string>
+    <string name="select_unit_type">Select Unit Type</string>
+    <string name="select_copies">Select Copies</string>
+    <string name="auto_select_in_format">Auto-selects in %1$ds</string>
+    <string name="tag_type_label">Tag Type</string>
+    <string name="unit_type_label">Unit Type</string>
+    <string name="copies_label">Copies</string>
+
+    <!-- Duplicate item dialog -->
+    <string name="same_item_found">Same Item Found</string>
+    <string name="previous_copies">Previous Copies: </string>
+    <string name="new_copies">New Copies: </string>
+    <string name="final_copies">Final Copies: </string>
+    <string name="confirm_save_question">Confirm Save?</string>
+
+    <!-- Scan screen -->
+    <string name="camera_permission_required">Camera permission required</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="no_recent_scans">No recent scans</string>
+    <string name="delete_scan_confirm">Are you sure you want to delete this scan record?</string>
+    <string name="manual_entry">Manual Entry</string>
+    <string name="barcode_label">Barcode</string>
+    <string name="please_enter_barcode">Please enter a barcode</string>
+    <string name="edit_item">Edit Item</string>
+    <string name="manual_mode_enter">Manual barcode entry</string>
+    <string name="manual_mode_exit">Exit manual mode</string>
+    <string name="failed_to_start_camera_format">Failed to start camera: %1$s</string>
+
+    <!-- Scanner inactive overlay -->
+    <string name="detected_enter_details">Detected • Enter details</string>
+    <string name="press_to_start_scan">Press to start scan</string>
+
+    <!-- Settings screen -->
+    <string name="scan_settings">Scan Settings</string>
+    <string name="beep_on_scan">Beep on scan</string>
+    <string name="beep_on_scan_subtitle">Plays a short beep when a barcode is detected</string>
+    <string name="vibrate_on_scan">Vibrate on scan</string>
+    <string name="vibrate_on_scan_subtitle">Vibrates when a barcode is detected</string>
+    <string name="data_management">Data Management</string>
+    <string name="clear_all_records">Clear All Records</string>
+    <string name="clear_all_records_confirm">This action cannot be undone. Are you sure?</string>
+    <string name="language">Language</string>
+    <string name="language_description">Choose the app\'s display language.</string>
+    <string name="language_system_default">System Default</string>
+    <string name="language_english">English</string>
+    <string name="language_arabic">العربية (Arabic)</string>
+</resources>
