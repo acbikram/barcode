@@ -14,16 +14,17 @@ import com.industrial.barcodescanner.presentation.screens.scan.ScanScreen
 import com.industrial.barcodescanner.presentation.screens.settings.SettingsScreen
 import com.industrial.barcodescanner.presentation.screens.detail.DetailScreen
 import com.industrial.barcodescanner.presentation.screens.backup.BackupRestoreScreen
+import com.industrial.barcodescanner.presentation.screens.printhistory.PrintHistoryScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Scan : Screen("scan")
-    // History accepts optional filter and sort query params from dashboard clicks
     object History : Screen("history?filter={filter}&sort={sort}") {
         const val BASE = "history"
     }
     object Export : Screen("export")
     object Settings : Screen("settings")
+    object PrintHistory : Screen("print_history")
     object Detail : Screen("detail/{itemId}") {
         fun passId(id: Long): String = "detail/$id"
     }
@@ -80,6 +81,16 @@ fun BarcodeToCsvNavHost(modifier: Modifier = Modifier) {
         }
         composable(Screen.BackupRestore.route) {
             BackupRestoreScreen(navController)
+        }
+        composable(Screen.PrintHistory.route) {
+            PrintHistoryScreen(
+                navController = navController,
+                onReprintJob = { job ->
+                    // Navigate to Export screen with the job's CSV pre-loaded
+                    navController.navigate(Screen.Export.route)
+                    // TODO: trigger reprint from Export once ExportViewModel supports it
+                }
+            )
         }
     }
 }

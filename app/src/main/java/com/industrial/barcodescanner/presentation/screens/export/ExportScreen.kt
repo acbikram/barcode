@@ -18,14 +18,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.industrial.barcodescanner.R
+import com.industrial.barcodescanner.domain.model.ResolvedItem
 import com.industrial.barcodescanner.presentation.components.BottomNavigationBar
 import com.industrial.barcodescanner.presentation.screens.scan.TAG_TYPES
 import com.industrial.barcodescanner.presentation.screens.scan.UNIT_TYPES
@@ -35,7 +41,7 @@ import com.industrial.barcodescanner.presentation.theme.GreenAccent
 import com.industrial.barcodescanner.presentation.theme.OrangeAccent
 import com.industrial.barcodescanner.presentation.theme.SubtleGray
 import com.industrial.barcodescanner.presentation.theme.SurfaceDark
-import com.industrial.barcodescanner.utils.LocalFileServer
+import com.industrial.barcodescanner.presentation.theme.SurfaceVariant
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,11 +89,7 @@ fun ExportScreen(
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                 Text(stringResource(R.string.export_selected_only), style = MaterialTheme.typography.titleMedium.copy(color = CyanAccent, fontWeight = FontWeight.Bold))
-                                Switch(
-                                    checked = uiState.selectiveExportEnabled,
-                                    onCheckedChange = { viewModel.setSelectiveExportEnabled(it) },
-                                    colors = SwitchDefaults.colors(checkedThumbColor = GreenAccent, checkedTrackColor = GreenAccent.copy(alpha = 0.4f))
-                                )
+                                Switch(checked = uiState.selectiveExportEnabled, onCheckedChange = { viewModel.setSelectiveExportEnabled(it) }, colors = SwitchDefaults.colors(checkedThumbColor = GreenAccent, checkedTrackColor = GreenAccent.copy(alpha = 0.4f)))
                             }
                             if (uiState.selectiveExportEnabled) {
                                 Spacer(Modifier.height(12.dp))
@@ -147,7 +149,6 @@ fun ExportScreen(
                     Card(colors = CardDefaults.cardColors(containerColor = SurfaceDark), shape = RoundedCornerShape(12.dp)) {
                         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text(stringResource(R.string.wifi_print), style = MaterialTheme.typography.titleMedium.copy(color = CyanAccent, fontWeight = FontWeight.Bold))
-
                             when (uiState.wifiState) {
                                 WifiState.IDLE -> {
                                     Button(onClick = { viewModel.discoverPcs() }, modifier = Modifier.fillMaxWidth(), enabled = exportCount > 0) {
@@ -156,14 +157,12 @@ fun ExportScreen(
                                         Text(stringResource(R.string.wifi_discover))
                                     }
                                 }
-
                                 WifiState.DISCOVERING -> {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                         CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                                         Text(stringResource(R.string.wifi_discovering), style = MaterialTheme.typography.bodyMedium.copy(color = SubtleGray))
                                     }
                                 }
-
                                 WifiState.PC_FOUND -> {
                                     if (uiState.discoveredPcs.size > 1) {
                                         Text(stringResource(R.string.wifi_select_pc), style = MaterialTheme.typography.labelMedium.copy(color = SubtleGray))
@@ -181,7 +180,6 @@ fun ExportScreen(
                                         Button(onClick = { viewModel.sendCsvToPC() }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.wifi_send)) }
                                     }
                                 }
-
                                 WifiState.SENDING -> {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                         CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = GreenAccent)
@@ -189,35 +187,28 @@ fun ExportScreen(
                                     }
                                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = GreenAccent, trackColor = GreenAccent.copy(alpha = 0.2f))
                                 }
-
-                                WifiState.WAITING_DECISION -> {
-                                    Text(stringResource(R.string.wifi_decision_title), style = MaterialTheme.typography.titleSmall.copy(color = OrangeAccent, fontWeight = FontWeight.Bold))
-                                    Text(uiState.wifiStatusMessage, style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        OutlinedButton(onClick = { viewModel.submitWifiDecision(false) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.wifi_cancel_all)) }
-                                        Button(onClick = { viewModel.submitWifiDecision(true) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.wifi_print_ready)) }
+                                WifiState.PREVIEW, WifiState.NEEDS_DECISION -> {
+                                    // Handled by full-screen dialogs below
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = CyanAccent)
+                                        Text(uiState.wifiStatusMessage, style = MaterialTheme.typography.bodyMedium.copy(color = CyanAccent))
                                     }
                                 }
-
+                                WifiState.PRINTING -> {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = GreenAccent)
+                                        Text(uiState.wifiStatusMessage, style = MaterialTheme.typography.bodyMedium.copy(color = GreenAccent))
+                                    }
+                                }
                                 WifiState.DONE -> {
                                     Card(colors = CardDefaults.cardColors(containerColor = GreenAccent.copy(alpha = 0.15f)), shape = RoundedCornerShape(8.dp)) {
-                                        Text(
-                                            text = stringResource(R.string.wifi_done_format, uiState.wifiPrintedCount),
-                                            style = MaterialTheme.typography.bodyMedium.copy(color = GreenAccent, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),
-                                            modifier = Modifier.fillMaxWidth().padding(14.dp)
-                                        )
-                                    }
-                                    if (uiState.wifiFailedItems.isNotEmpty()) {
-                                        Text(stringResource(R.string.wifi_failed_format, uiState.wifiFailedItems.size), style = MaterialTheme.typography.bodySmall.copy(color = OrangeAccent))
+                                        Text(stringResource(R.string.wifi_done_format, uiState.wifiPrintedCount), style = MaterialTheme.typography.bodyMedium.copy(color = GreenAccent, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center), modifier = Modifier.fillMaxWidth().padding(14.dp))
                                     }
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         OutlinedButton(onClick = { viewModel.resetWifi() }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.wifi_reset)) }
-                                        if (uiState.wifiFailedItems.isNotEmpty()) {
-                                            Button(onClick = { viewModel.discoverPcs() }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.wifi_retry)) }
-                                        }
+                                        Button(onClick = { viewModel.discoverPcs() }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.wifi_send)) }
                                     }
                                 }
-
                                 WifiState.ERROR -> {
                                     Card(colors = CardDefaults.cardColors(containerColor = ErrorRed.copy(alpha = 0.12f)), shape = RoundedCornerShape(8.dp)) {
                                         Text(uiState.wifiStatusMessage, style = MaterialTheme.typography.bodySmall.copy(color = ErrorRed), modifier = Modifier.fillMaxWidth().padding(12.dp))
@@ -229,7 +220,7 @@ fun ExportScreen(
                     }
                 }
 
-                // ── Save / Share CSV buttons ────────────────────────────────────
+                // ── Save / Share CSV ────────────────────────────────────────────
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Button(onClick = { saveLauncher.launch("BarcodeToCsv_${System.currentTimeMillis()}.csv") }, modifier = Modifier.fillMaxWidth(), enabled = !uiState.isExporting && exportCount > 0) {
@@ -246,6 +237,7 @@ fun ExportScreen(
                 }
             }
 
+            // Export loading overlay
             if (uiState.isExporting) {
                 Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)), contentAlignment = Alignment.Center) {
                     Card(modifier = Modifier.width(200.dp)) {
@@ -259,6 +251,26 @@ fun ExportScreen(
         }
     }
 
+    // ── Preview dialog (all items resolved — no failures) ────────────────────
+    if (uiState.wifiState == WifiState.PREVIEW && uiState.previewReadyItems.isNotEmpty()) {
+        PrintPreviewDialog(
+            readyItems = uiState.previewReadyItems,
+            onPrint = { viewModel.confirmPrint() },
+            onCancel = { viewModel.cancelPreview() }
+        )
+    }
+
+    // ── Error/decision dialog (some items failed) ─────────────────────────────
+    if (uiState.wifiState == WifiState.NEEDS_DECISION) {
+        PrintDecisionDialog(
+            readyItems = uiState.previewReadyItems,
+            failedItems = uiState.previewFailedItems,
+            onPrintReady = { viewModel.submitDecision(true) },
+            onCancelAll = { viewModel.cancelDecision() }
+        )
+    }
+
+    // ── Side effects ──────────────────────────────────────────────────────────
     if (uiState.error != null) {
         LaunchedEffect(uiState.error) { scope.launch { snackbarHostState.showSnackbar(uiState.error!!); viewModel.clearError() } }
     }
@@ -274,6 +286,156 @@ fun ExportScreen(
             }
             context.startActivity(Intent.createChooser(sendIntent, shareCsvLabel))
             viewModel.consumeShareFileUri()
+        }
+    }
+}
+
+// ── Print Preview Dialog ──────────────────────────────────────────────────────
+
+@Composable
+private fun PrintPreviewDialog(
+    readyItems: List<ResolvedItem>,
+    onPrint: () -> Unit,
+    onCancel: () -> Unit
+) {
+    Dialog(onDismissRequest = onCancel) {
+        Surface(shape = RoundedCornerShape(18.dp), color = SurfaceDark, tonalElevation = 8.dp, modifier = Modifier.fillMaxWidth().fillMaxHeight(0.85f)) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Title bar
+                Box(modifier = Modifier.fillMaxWidth().background(SurfaceVariant).padding(16.dp)) {
+                    Text(stringResource(R.string.preview_title), style = MaterialTheme.typography.titleMedium.copy(color = CyanAccent, fontWeight = FontWeight.Bold))
+                }
+                Text(stringResource(R.string.preview_ready_format, readyItems.size), style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray), modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+
+                // Column headers
+                PreviewTableHeader()
+                HorizontalDivider(color = Color(0xFF30363D))
+
+                // Item rows
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(readyItems) { item ->
+                        PreviewItemRow(item)
+                        HorizontalDivider(color = Color(0xFF1C2333))
+                    }
+                }
+
+                HorizontalDivider(color = Color(0xFF30363D))
+                Row(modifier = Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.preview_cancel)) }
+                    Button(onClick = onPrint, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = GreenAccent)) {
+                        Text(stringResource(R.string.preview_print), color = Color(0xFF001100), fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PreviewTableHeader() {
+    Row(modifier = Modifier.fillMaxWidth().background(SurfaceVariant).padding(horizontal = 8.dp, vertical = 6.dp)) {
+        Text(stringResource(R.string.preview_col_item_code), style = MaterialTheme.typography.labelSmall.copy(color = CyanAccent), modifier = Modifier.width(100.dp))
+        Text(stringResource(R.string.preview_col_description), style = MaterialTheme.typography.labelSmall.copy(color = SubtleGray), modifier = Modifier.weight(1f).padding(horizontal = 4.dp))
+        Text(stringResource(R.string.preview_col_price), style = MaterialTheme.typography.labelSmall.copy(color = OrangeAccent), modifier = Modifier.width(60.dp), textAlign = TextAlign.End)
+        Text(stringResource(R.string.preview_col_copies), style = MaterialTheme.typography.labelSmall.copy(color = GreenAccent), modifier = Modifier.width(44.dp), textAlign = TextAlign.Center)
+    }
+}
+
+@Composable
+private fun PreviewItemRow(item: ResolvedItem) {
+    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(item.pos, style = MaterialTheme.typography.bodySmall.copy(color = CyanAccent, fontFamily = FontFamily.Monospace), modifier = Modifier.width(100.dp), maxLines = 1)
+        Text(item.eng.ifBlank { item.pos }, style = MaterialTheme.typography.bodySmall.copy(color = Color.White), modifier = Modifier.weight(1f).padding(horizontal = 4.dp), maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text("—", style = MaterialTheme.typography.bodySmall.copy(color = OrangeAccent), modifier = Modifier.width(60.dp), textAlign = TextAlign.End)  // price always "—" before printing
+        Text("×${item.copies}", style = MaterialTheme.typography.bodySmall.copy(color = GreenAccent, fontWeight = FontWeight.Bold), modifier = Modifier.width(44.dp), textAlign = TextAlign.Center)
+    }
+}
+
+// ── Print Decision Dialog (some items failed) ─────────────────────────────────
+
+@Composable
+private fun PrintDecisionDialog(
+    readyItems: List<ResolvedItem>,
+    failedItems: List<ResolvedItem>,
+    onPrintReady: () -> Unit,
+    onCancelAll: () -> Unit
+) {
+    Dialog(onDismissRequest = onCancelAll) {
+        Surface(shape = RoundedCornerShape(18.dp), color = SurfaceDark, tonalElevation = 8.dp, modifier = Modifier.fillMaxWidth().fillMaxHeight(0.9f)) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Title
+                Box(modifier = Modifier.fillMaxWidth().background(ErrorRed.copy(alpha = 0.2f)).padding(16.dp)) {
+                    Text(stringResource(R.string.error_dialog_title), style = MaterialTheme.typography.titleMedium.copy(color = ErrorRed, fontWeight = FontWeight.Bold))
+                }
+
+                // Summary chips
+                Row(modifier = Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Card(colors = CardDefaults.cardColors(containerColor = GreenAccent.copy(alpha = 0.15f)), shape = RoundedCornerShape(8.dp)) {
+                        Text(stringResource(R.string.error_ready_format, readyItems.size), style = MaterialTheme.typography.bodySmall.copy(color = GreenAccent, fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+                    }
+                    Card(colors = CardDefaults.cardColors(containerColor = ErrorRed.copy(alpha = 0.15f)), shape = RoundedCornerShape(8.dp)) {
+                        Text(stringResource(R.string.error_failed_format, failedItems.size), style = MaterialTheme.typography.bodySmall.copy(color = ErrorRed, fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+                    }
+                }
+
+                HorizontalDivider(color = Color(0xFF30363D))
+
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    // Ready items section
+                    if (readyItems.isNotEmpty()) {
+                        item {
+                            Text(stringResource(R.string.error_ready_format, readyItems.size), style = MaterialTheme.typography.labelLarge.copy(color = GreenAccent, fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
+                        }
+                        item { PreviewTableHeader() }
+                        items(readyItems) { item ->
+                            PreviewItemRow(item)
+                            HorizontalDivider(color = Color(0xFF1C2333))
+                        }
+                    }
+
+                    // Failed items section
+                    if (failedItems.isNotEmpty()) {
+                        item { Spacer(Modifier.height(8.dp)) }
+                        item {
+                            Row(modifier = Modifier.fillMaxWidth().background(ErrorRed.copy(alpha = 0.1f)).padding(horizontal = 12.dp, vertical = 8.dp)) {
+                                Text(stringResource(R.string.error_failed_items_header), style = MaterialTheme.typography.labelLarge.copy(color = ErrorRed, fontWeight = FontWeight.Bold))
+                            }
+                        }
+                        items(failedItems) { item ->
+                            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.Top) {
+                                Column(modifier = Modifier.width(100.dp)) {
+                                    Text(item.pos, style = MaterialTheme.typography.bodySmall.copy(color = ErrorRed, fontFamily = FontFamily.Monospace), maxLines = 1)
+                                    Text(item.tag, style = MaterialTheme.typography.labelSmall.copy(color = SubtleGray))
+                                }
+                                Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
+                                    if (item.eng.isNotBlank()) {
+                                        Text(item.eng, style = MaterialTheme.typography.bodySmall.copy(color = Color.White), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    }
+                                    // Show exact error reason from PC
+                                    Text(
+                                        item.reason.ifBlank { "Unknown error" },
+                                        style = MaterialTheme.typography.bodySmall.copy(color = ErrorRed, fontSize = 11.sp),
+                                        maxLines = 2
+                                    )
+                                }
+                            }
+                            HorizontalDivider(color = Color(0xFF2D1010))
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = Color(0xFF30363D))
+                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (readyItems.isNotEmpty()) {
+                        Button(onClick = onPrintReady, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = GreenAccent)) {
+                            Text(stringResource(R.string.error_print_ready), color = Color(0xFF001100), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    OutlinedButton(onClick = onCancelAll, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorRed)) {
+                        Text(stringResource(R.string.error_cancel_all), color = ErrorRed)
+                    }
+                }
+            }
         }
     }
 }

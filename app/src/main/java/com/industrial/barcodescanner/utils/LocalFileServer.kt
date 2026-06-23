@@ -3,6 +3,9 @@ package com.industrial.barcodescanner.utils
 import android.content.Context
 import android.net.wifi.WifiManager
 import android.text.format.Formatter
+import com.industrial.barcodescanner.domain.model.PrintItem
+import com.industrial.barcodescanner.domain.model.PrintSheet
+import com.industrial.barcodescanner.domain.model.ResolvedItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -15,23 +18,26 @@ import java.net.InetAddress
 import java.net.Socket
 
 /**
- * Implements the exact same wire-protocol the Price_Tag_Final.py PC app expects:
+ * Implements the exact wire-protocol used by Price_Tag_Final.py:
  *
- *   DISCOVERY (UDP):
- *     Phone broadcasts  "PTAGWHO1" on UDP port 8765
- *     PC replies with   JSON: {"name":"PCName","ip":"x.x.x.x","port":8765}
+ *  DISCOVERY (UDP port 8765):
+ *    Phone broadcasts  "PTAGWHO1"
+ *    PC replies        JSON {"name":"…","ip":"…","port":N}
  *
- *   CSV PUSH (TCP):
- *     Phone → PC : MAGIC(8) "PTAGCSV1" + LEN(4 big-endian) + CSV bytes (UTF-8/BOM ok)
- *     PC   → Phone: newline-terminated JSON messages:
- *       {"type":"busy"}
- *       {"type":"result","ready":N,"failed":[...],"retry_csv":"..."}
- *       {"type":"done","printed":N}
- *       {"type":"printed","printed":N,"failed":[...],"retry_csv":"..."}
- *       {"type":"error","message":"..."}
- *       {"type":"cancelled"}
- *     Phone → PC (only when result has failures AND ready>0):
- *       {"decision":"print"} or {"decision":"cancel"}
+ *  CSV PUSH (TCP port from discovery reply):
+ *    Phone → PC : "PTAGCSV1" (8) + LEN (4 big-endian) + CSV bytes
+ *    PC → Phone : JSON lines:
+ *      {"type":"busy"}
+ *      {"type":"result","ready":N,"failed":[{row,pos,reason}…],
+ *       "items":[{pos,eng,unit,copies,tag,status,reason}…],
+ *       "sheets":[{tag,unit,copies,n_tags,items:[{pos,eng,unit,copies,price}…]}…],
+ *       "retry_csv":"…"}
+ *      {"type":"done","printed":N}
+ *      {"type":"printed","printed":N,"failed_sheets":N}
+ *      {"type":"error","message":"…"}
+ *      {"type":"cancelled"}
+ *    Phone → PC (only when result has ready>0 AND failures):
+ *      {"decision":"print"} or {"decision":"cancel"}
  */
 object LocalFileServer {
 
@@ -40,7 +46,6 @@ object LocalFileServer {
     private val MAGIC_CSV     = "PTAGCSV1".toByteArray(Charsets.US_ASCII)
     private val DISCOVERY_REQ = "PTAGWHO1".toByteArray(Charsets.US_ASCII)
 
-    /** Returns the device's current WiFi IP address, or null if not connected. */
     fun getWifiIpAddress(context: Context): String? {
         val wm = context.applicationContext
             .getSystemService(Context.WIFI_SERVICE) as? WifiManager ?: return null
@@ -49,24 +54,16 @@ object LocalFileServer {
         return Formatter.formatIpAddress(ip)
     }
 
-    /**
-     * Discovers all PCs on the LAN that are running Price_Tag_Final.py with
-     * the WiFi receiver enabled. Sends a single UDP broadcast on [DISCOVERY_PORT]
-     * and collects replies for [timeoutMs] ms.
-     *
-     * Returns a list of [PcInfo] objects — one per responding PC.
-     */
-    suspend fun discoverPcs(timeoutMs: Int = 2000): List<PcInfo> = withContext(Dispatchers.IO) {
+    suspend fun discoverPcs(timeoutMs: Int = 2500): List<PcInfo> = withContext(Dispatchers.IO) {
         val results = mutableListOf<PcInfo>()
         try {
             DatagramSocket().use { sock ->
                 sock.broadcast = true
                 sock.soTimeout = timeoutMs
-                val req = DatagramPacket(
+                sock.send(DatagramPacket(
                     DISCOVERY_REQ, DISCOVERY_REQ.size,
                     InetAddress.getByName("255.255.255.255"), DISCOVERY_PORT
-                )
-                sock.send(req)
+                ))
                 val buf = ByteArray(2048)
                 val deadline = System.currentTimeMillis() + timeoutMs
                 while (System.currentTimeMillis() < deadline) {
@@ -75,16 +72,12 @@ object LocalFileServer {
                         sock.receive(reply)
                         val text = String(buf, 0, reply.length, Charsets.UTF_8)
                         val json = JSONObject(text)
-                        results.add(
-                            PcInfo(
-                                name = json.optString("name", "PC"),
-                                ip   = json.optString("ip", reply.address.hostAddress ?: ""),
-                                port = json.optInt("port", TCP_PORT)
-                            )
-                        )
-                    } catch (e: IOException) {
-                        break  // timeout — no more replies
-                    }
+                        results.add(PcInfo(
+                            name = json.optString("name", "PC"),
+                            ip   = json.optString("ip", reply.address.hostAddress ?: ""),
+                            port = json.optInt("port", TCP_PORT)
+                        ))
+                    } catch (_: IOException) { break }
                 }
             }
         } catch (_: Exception) {}
@@ -92,76 +85,81 @@ object LocalFileServer {
     }
 
     /**
-     * Pushes the CSV (already sorted oldest-first) to [pc] via the TCP protocol.
-     * Returns a [PushResult] describing what happened.
+     * Pushes the CSV to [pc].
+     *
+     * Returns one of:
+     * - [PushResult.Preview]         — PC resolved everything; show preview before deciding
+     * - [PushResult.NeedsDecision]   — some items failed; show errors + ask Cancel/Print
+     * - [PushResult.Done]            — printed successfully (after user approved)
+     * - [PushResult.Busy]            — PC is handling another job
+     * - [PushResult.Error]           — connection or protocol error
+     *
+     * The caller must call [sendDecision] on the same [socket handle] returned in
+     * [PushResult.NeedsDecision] / [PushResult.Preview] to continue the conversation.
      */
-    suspend fun pushCsv(
+    suspend fun pushCsvAndGetPreview(
         pc: PcInfo,
         csvBytes: ByteArray,
-        onStatus: (String) -> Unit = {},
-        onDecisionNeeded: suspend (ready: Int, failed: List<FailedItem>, retryCsv: String) -> Boolean = { _, _, _ -> false }
+        onStatus: (String) -> Unit = {}
     ): PushResult = withContext(Dispatchers.IO) {
         try {
-            Socket(pc.ip, pc.port).use { sock ->
-                sock.soTimeout = 30_000
-                val out = DataOutputStream(sock.getOutputStream())
-                val reader = sock.getInputStream().bufferedReader(Charsets.UTF_8)
+            val sock = Socket(pc.ip, pc.port)
+            sock.soTimeout = 30_000
+            val out = DataOutputStream(sock.getOutputStream())
+            val reader = sock.getInputStream().bufferedReader(Charsets.UTF_8)
 
-                // 1. Send magic + length + csv
-                out.write(MAGIC_CSV)
-                out.writeInt(csvBytes.size)   // 4 bytes big-endian
-                out.write(csvBytes)
-                out.flush()
-                onStatus("Sent ${csvBytes.size} bytes to ${pc.name}")
+            // 1. Send MAGIC + LEN + CSV
+            out.write(MAGIC_CSV)
+            out.writeInt(csvBytes.size)
+            out.write(csvBytes)
+            out.flush()
+            onStatus("Sent to ${pc.name}…")
 
-                // 2. Read response from PC
-                sock.soTimeout = 60_000
-                val line = reader.readLine() ?: return@withContext PushResult.Error("No response from PC")
-                val msg = JSONObject(line)
+            // 2. Read first response (PC analyses the CSV)
+            sock.soTimeout = 90_000
+            val line = reader.readLine()
+                ?: return@withContext PushResult.Error("No response from PC")
+            val msg = JSONObject(line)
 
-                when (val type = msg.optString("type")) {
-                    "busy" -> return@withContext PushResult.Busy
+            when (val type = msg.optString("type")) {
+                "busy" -> {
+                    sock.close()
+                    return@withContext PushResult.Busy
+                }
+                "result" -> {
+                    val ready      = msg.optInt("ready", 0)
+                    val failed     = parseFailedItems(msg)
+                    val retryCsv   = msg.optString("retry_csv", "")
+                    val allItems   = parseResolvedItems(msg)
+                    val sheets     = parseSheets(msg)
 
-                    "done" -> {
-                        val printed = msg.optInt("printed", 0)
-                        onStatus("Printed $printed item(s)")
-                        return@withContext PushResult.Done(printed)
+                    return@withContext if (failed.isEmpty()) {
+                        // Everything resolved — show preview, then user taps Print
+                        PushResult.Preview(
+                            readyItems = allItems.filter { it.status == "ready" },
+                            sheets = sheets,
+                            retryCsv = retryCsv,
+                            sock = sock, out = out, reader = reader
+                        )
+                    } else {
+                        // Some items failed — show errors and ask
+                        PushResult.NeedsDecision(
+                            readyItems  = allItems.filter { it.status == "ready" },
+                            failedItems = allItems.filter { it.status == "failed" },
+                            sheets = sheets,
+                            retryCsv = retryCsv,
+                            sock = sock, out = out, reader = reader,
+                            ready = ready
+                        )
                     }
-
-                    "result" -> {
-                        val ready  = msg.optInt("ready", 0)
-                        val failed = parseFailedItems(msg)
-                        val retry  = msg.optString("retry_csv", "")
-
-                        if (failed.isEmpty()) {
-                            // Wait for "printed" or "done"
-                            sock.soTimeout = 120_000
-                            val line2 = reader.readLine()
-                            val msg2  = if (line2 != null) JSONObject(line2) else null
-                            val printed = msg2?.optInt("printed", ready) ?: ready
-                            return@withContext PushResult.Done(printed)
-                        }
-
-                        // Some failed — ask the user
-                        val shouldPrint = onDecisionNeeded(ready, failed, retry)
-                        if (ready > 0) {
-                            val decision = if (shouldPrint) "print" else "cancel"
-                            out.write(("{\"decision\":\"$decision\"}\n").toByteArray(Charsets.UTF_8))
-                            out.flush()
-                            if (shouldPrint) {
-                                sock.soTimeout = 120_000
-                                val line2 = reader.readLine()
-                                val msg2  = if (line2 != null) JSONObject(line2) else null
-                                val printed = msg2?.optInt("printed", ready) ?: ready
-                                return@withContext PushResult.PartialDone(printed, failed, retry)
-                            }
-                        }
-                        return@withContext PushResult.PartialDone(0, failed, retry)
-                    }
-
-                    "error" -> return@withContext PushResult.Error(msg.optString("message", "Unknown error"))
-
-                    else -> return@withContext PushResult.Error("Unexpected response: $type")
+                }
+                "error" -> {
+                    sock.close()
+                    return@withContext PushResult.Error(msg.optString("message", "Unknown error"))
+                }
+                else -> {
+                    sock.close()
+                    return@withContext PushResult.Error("Unexpected response: $type")
                 }
             }
         } catch (e: Exception) {
@@ -169,24 +167,121 @@ object LocalFileServer {
         }
     }
 
-    /** Builds the framed CSV bytes (MAGIC + LEN + CSV) ready to send. */
+    /**
+     * After the user decides (Print / Cancel), finishes the TCP conversation.
+     * Returns the sheets that were actually printed.
+     */
+    suspend fun sendDecision(
+        decision: Boolean,
+        result: PushResult.NeedsDecision,
+        onStatus: (String) -> Unit = {}
+    ): FinalResult = withContext(Dispatchers.IO) {
+        try {
+            if (result.ready <= 0 || !decision) {
+                // Nothing to print or user cancelled
+                result.sock.close()
+                return@withContext FinalResult(printed = 0, sheets = emptyList(), cancelled = !decision)
+            }
+            val decisionStr = if (decision) "print" else "cancel"
+            result.out.write(("{\"decision\":\"$decisionStr\"}\n").toByteArray(Charsets.UTF_8))
+            result.out.flush()
+            onStatus("Printing…")
+            result.sock.soTimeout = 120_000
+            val line2 = result.reader.readLine()
+            val msg2 = if (line2 != null) JSONObject(line2) else null
+            val printed = msg2?.optInt("printed", result.ready) ?: result.ready
+            result.sock.close()
+            FinalResult(printed = printed, sheets = result.sheets)
+        } catch (e: Exception) {
+            runCatching { result.sock.close() }
+            FinalResult(printed = 0, sheets = emptyList(), error = e.message)
+        }
+    }
+
+    /**
+     * For the all-clear case (no failures): user taps Print after preview.
+     */
+    suspend fun confirmPrint(
+        result: PushResult.Preview,
+        onStatus: (String) -> Unit = {}
+    ): FinalResult = withContext(Dispatchers.IO) {
+        try {
+            onStatus("Printing…")
+            result.sock.soTimeout = 120_000
+            val line2 = result.reader.readLine()
+            val msg2 = if (line2 != null) JSONObject(line2) else null
+            val printed = msg2?.optInt("printed", result.readyItems.size) ?: result.readyItems.size
+            result.sock.close()
+            FinalResult(printed = printed, sheets = result.sheets)
+        } catch (e: Exception) {
+            runCatching { result.sock.close() }
+            FinalResult(printed = 0, sheets = emptyList(), error = e.message)
+        }
+    }
+
+    fun cancelPreview(result: PushResult.Preview) = runCatching { result.sock.close() }
+    fun cancelDecision(result: PushResult.NeedsDecision) = runCatching { result.sock.close() }
+
     fun buildCsvBytes(items: List<com.industrial.barcodescanner.domain.model.ScannedItem>): ByteArray {
         val csvStream = ByteArrayOutputStream()
         CsvExporter.writeCsv(csvStream, items)
         return csvStream.toByteArray()
     }
 
+    // ── Parsing helpers ──────────────────────────────────────────────────────
+
     private fun parseFailedItems(msg: JSONObject): List<FailedItem> {
         val arr = msg.optJSONArray("failed") ?: return emptyList()
         return (0 until arr.length()).mapNotNull { i ->
             val obj = arr.optJSONObject(i) ?: return@mapNotNull null
-            FailedItem(
-                row    = obj.optInt("row", 0),
+            FailedItem(row = obj.optInt("row", 0), pos = obj.optString("pos", ""), reason = obj.optString("reason", ""))
+        }
+    }
+
+    private fun parseResolvedItems(msg: JSONObject): List<ResolvedItem> {
+        val arr = msg.optJSONArray("items") ?: return emptyList()
+        return (0 until arr.length()).mapNotNull { i ->
+            val obj = arr.optJSONObject(i) ?: return@mapNotNull null
+            ResolvedItem(
                 pos    = obj.optString("pos", ""),
+                eng    = obj.optString("eng", ""),
+                unit   = obj.optString("unit", ""),
+                copies = obj.optInt("copies", 1),
+                tag    = obj.optString("tag", ""),
+                status = obj.optString("status", "ready"),
                 reason = obj.optString("reason", "")
             )
         }
     }
+
+    private fun parseSheets(msg: JSONObject): List<PrintSheet> {
+        val arr = msg.optJSONArray("sheets") ?: return emptyList()
+        return (0 until arr.length()).mapNotNull { i ->
+            val obj = arr.optJSONObject(i) ?: return@mapNotNull null
+            val itemsArr = obj.optJSONArray("items")
+            val items = if (itemsArr != null) {
+                (0 until itemsArr.length()).mapNotNull { j ->
+                    val it = itemsArr.optJSONObject(j) ?: return@mapNotNull null
+                    PrintItem(
+                        pos    = it.optString("pos", ""),
+                        eng    = it.optString("eng", ""),
+                        unit   = it.optString("unit", ""),
+                        copies = it.optInt("copies", 1),
+                        price  = it.optString("price", "")
+                    )
+                }
+            } else emptyList()
+            PrintSheet(
+                tag    = obj.optString("tag", ""),
+                unit   = obj.optString("unit", ""),
+                copies = obj.optInt("copies", 1),
+                nTags  = obj.optInt("n_tags", items.size),
+                items  = items
+            )
+        }
+    }
+
+    // ── Data classes ─────────────────────────────────────────────────────────
 
     data class PcInfo(val name: String, val ip: String, val port: Int) {
         override fun toString() = "$name ($ip:$port)"
@@ -194,9 +289,36 @@ object LocalFileServer {
 
     data class FailedItem(val row: Int, val pos: String, val reason: String)
 
+    data class FinalResult(
+        val printed: Int,
+        val sheets: List<PrintSheet>,
+        val cancelled: Boolean = false,
+        val error: String? = null
+    )
+
     sealed class PushResult {
-        data class Done(val printed: Int) : PushResult()
-        data class PartialDone(val printed: Int, val failed: List<FailedItem>, val retryCsv: String) : PushResult()
+        /** All items resolved — show preview, wait for user to tap Print. */
+        data class Preview(
+            val readyItems: List<ResolvedItem>,
+            val sheets: List<PrintSheet>,
+            val retryCsv: String,
+            internal val sock: Socket,
+            internal val out: DataOutputStream,
+            internal val reader: java.io.BufferedReader
+        ) : PushResult()
+
+        /** Some items failed — show errors, ask Cancel / Print ready. */
+        data class NeedsDecision(
+            val readyItems: List<ResolvedItem>,
+            val failedItems: List<ResolvedItem>,
+            val sheets: List<PrintSheet>,
+            val retryCsv: String,
+            val ready: Int,
+            internal val sock: Socket,
+            internal val out: DataOutputStream,
+            internal val reader: java.io.BufferedReader
+        ) : PushResult()
+
         object Busy : PushResult()
         data class Error(val message: String) : PushResult()
     }

@@ -84,15 +84,40 @@
     <string name="wifi_select_pc">Select PC</string>
     <string name="wifi_send">Send to PC</string>
     <string name="wifi_sending">Sending…</string>
-    <string name="wifi_done_format">✓ Printed %1$d item(s)</string>
-    <string name="wifi_failed_format">%1$d item(s) could not be resolved by the PC</string>
+    <string name="wifi_done_format">✓ Printed %1$d sheet(s)</string>
     <string name="wifi_busy">PC is busy. Try again shortly.</string>
-    <string name="wifi_decision_title">Some Items Failed</string>
-    <string name="wifi_decision_message_format">%1$d item(s) ready to print, %2$d failed. Print the ready items?</string>
-    <string name="wifi_print_ready">Print Ready Items</string>
-    <string name="wifi_cancel_all">Cancel</string>
     <string name="wifi_reset">Reset</string>
     <string name="wifi_retry">Retry</string>
+    <string name="wifi_cancel">Cancel</string>
+
+    <!-- Preview dialog -->
+    <string name="preview_title">Print Preview</string>
+    <string name="preview_ready_format">%1$d item(s) ready to print</string>
+    <string name="preview_col_item_code">Item Code</string>
+    <string name="preview_col_description">Description</string>
+    <string name="preview_col_price">Price</string>
+    <string name="preview_col_copies">Copies</string>
+    <string name="preview_print">Print</string>
+    <string name="preview_cancel">Cancel</string>
+
+    <!-- Error / decision dialog -->
+    <string name="error_dialog_title">Some Items Failed</string>
+    <string name="error_ready_format">%1$d item(s) ready</string>
+    <string name="error_failed_format">%1$d item(s) failed</string>
+    <string name="error_failed_items_header">Failed Items</string>
+    <string name="error_reason_format">Row %1$d: %2$s — %3$s</string>
+    <string name="error_cancel_all">Cancel Entire Job</string>
+    <string name="error_print_ready">Print Ready Items Only</string>
+
+    <!-- Print history -->
+    <string name="print_history">Recent Print Jobs</string>
+    <string name="print_history_short">Print Jobs</string>
+    <string name="print_history_empty">No print jobs yet.\nSend a CSV to your PC via WiFi to start.</string>
+    <string name="print_jobs">job(s)</string>
+    <string name="print_job_sheets_format">%1$d page(s)</string>
+    <string name="print_job_items_format">%1$d item(s)</string>
+    <string name="print_job_delete_confirm">Delete this print job from history?</string>
+    <string name="reprint">Reprint</string>
 
     <!-- Backup & Restore screen -->
     <string name="backup_restore">Backup &amp; Restore</string>

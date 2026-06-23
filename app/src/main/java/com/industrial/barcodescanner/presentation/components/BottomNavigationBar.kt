@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -33,11 +34,12 @@ private data class NavItem(
 fun BottomNavigationBar(navController: NavController) {
 
     val items = listOf(
-        NavItem(Screen.Home,     R.string.home,     Icons.Default.Home),
-        NavItem(Screen.Scan,     R.string.scan,     Icons.Default.QrCodeScanner),
-        NavItem(Screen.History,  R.string.history,  Icons.Default.History),
-        NavItem(Screen.Export,   R.string.export,   Icons.Default.FileUpload),
-        NavItem(Screen.Settings, R.string.settings, Icons.Default.Settings)
+        NavItem(Screen.Home,         R.string.home,          Icons.Default.Home),
+        NavItem(Screen.Scan,         R.string.scan,          Icons.Default.QrCodeScanner),
+        NavItem(Screen.History,      R.string.history,       Icons.Default.History),
+        NavItem(Screen.Export,       R.string.export,        Icons.Default.FileUpload),
+        NavItem(Screen.PrintHistory, R.string.print_history_short, Icons.Default.Print),
+        NavItem(Screen.Settings,     R.string.settings,      Icons.Default.Settings)
     )
 
     val backStackEntry by navController.currentBackStackEntryAsState()
