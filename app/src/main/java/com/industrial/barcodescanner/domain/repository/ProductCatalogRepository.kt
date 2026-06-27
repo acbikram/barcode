@@ -1,12 +1,8 @@
 package com.industrial.barcodescanner.domain.repository
 
 import com.industrial.barcodescanner.domain.model.ProductInfo
-import java.io.File
 
 interface ProductCatalogRepository {
+    /** Returns product info for [barcode], or null if it's not in the catalog. */
     suspend fun lookup(barcode: String): ProductInfo?
-    /** Imports a new products.db; returns item count immediately without restart. */
-    suspend fun importFromFile(file: File): Int
-    fun catalogLastModified(): Long
-    suspend fun countProducts(): Int
 }

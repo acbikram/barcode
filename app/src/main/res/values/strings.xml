@@ -65,6 +65,62 @@
     <string name="total_records_count_format">Total records: %1$d</string>
     <string name="save_csv">Save CSV</string>
     <string name="share_csv">Share CSV</string>
+    <string name="share_wifi">Share WiFi</string>
+    <string name="wifi_dialog_title">Send to PC over WiFi</string>
+    <string name="wifi_dialog_hint">Enter the IP and port shown on the PC under Batch Print → +WiFi. Both devices must be on the same Wi-Fi network.</string>
+    <string name="wifi_server_ip">PC IP address</string>
+    <string name="wifi_port">Port</string>
+    <string name="wifi_send">Send</string>
+    <string name="wifi_invalid_input">Enter a valid IP address and port</string>
+    <string name="wifi_sent_format">Sent %1$d row(s) to %2$s</string>
+    <string name="wifi_failed_format">WiFi send failed: %1$s</string>
+    <string name="wifi_working_title">Share WiFi</string>
+    <string name="wifi_stage_connecting">Connecting to PC…</string>
+    <string name="wifi_stage_checking">Checking prices on the PC…</string>
+    <string name="wifi_stage_printing">Printing on the PC…</string>
+    <string name="wifi_row_label">Row</string>
+    <string name="wifi_some_failed_title">Some items can\'t be printed</string>
+    <string name="wifi_ready_count">%1$d item(s) are ready to print.</string>
+    <string name="wifi_print_ready_format">Print ready items (%1$d)</string>
+    <string name="wifi_none_printable_title">No items could be printed</string>
+    <string name="wifi_retry">Retry</string>
+    <string name="wifi_printed_title_format">Printed %1$d item(s)</string>
+    <string name="wifi_retry_prompt">%1$d item(s) couldn\'t be printed. Retry them now?</string>
+    <string name="wifi_retry_yes">Yes, retry</string>
+    <string name="wifi_retry_no">No</string>
+    <string name="wifi_empty">Nothing selected to send</string>
+    <string name="wifi_busy">PC is busy — try again shortly</string>
+    <string name="wifi_cancelled">Cancelled — nothing printed</string>
+    <string name="wifi_done">Done</string>
+    <string name="wifi_printed_format">Printed %1$d item(s)</string>
+    <string name="wifi_printed_rest_cancelled_format">Printed %1$d item(s); the rest were cancelled</string>
+    <string name="wifi_find_pcs">🔍 Find PCs on network</string>
+    <string name="wifi_searching">Searching…</string>
+    <string name="wifi_test">Test connection</string>
+    <string name="wifi_testing">Testing…</string>
+    <string name="wifi_no_pcs">No PCs found. Make sure the PC has the WiFi receiver enabled on the same network.</string>
+    <string name="wifi_test_ok_format">Connected to %1$s ✓</string>
+    <string name="wifi_test_fail_format">Can\'t reach PC: %1$s</string>
+    <string name="wifi_reprint_title_format">%1$d sheet(s) didn\'t print</string>
+    <string name="wifi_reprint_prompt">%1$d sheet(s) failed to print (printer error) after %2$d printed. Reprint them?</string>
+    <string name="wifi_reprint_yes">Reprint</string>
+    <string name="wifi_reprint_skip">Skip</string>
+    <string name="wifi_history_button">🖨 Wi-Fi Print History</string>
+    <string name="wifi_history_title">Wi-Fi Print History</string>
+    <string name="wifi_history_empty">No Wi-Fi print history yet. Items you send with Share Wi-Fi will appear here.</string>
+    <string name="wifi_history_clear">Clear history</string>
+    <string name="wifi_history_clear_confirm">Delete all Wi-Fi print history? This can\'t be undone.</string>
+    <string name="wifi_history_pos">POS</string>
+    <string name="wifi_history_printed">✓ Printed</string>
+    <string name="wifi_history_failed_format">✗ Failed: %1$s</string>
+    <string name="wifi_history_reprint">Reprint</string>
+    <string name="wifi_unreachable">Couldn’t reach the PC. Make sure it’s on and the WiFi receiver is enabled on the same network.</string>
+    <string name="wifi_history_search_hint">Search POS, description or date…</string>
+    <string name="wifi_history_job_summary">%1$d page(s) printed • %2$d failed</string>
+    <string name="wifi_history_delete_job">Delete this job</string>
+    <string name="wifi_history_reprint_job">Reprint whole job</string>
+    <string name="wifi_history_retry_failed">Retry failed</string>
+    <string name="wifi_history_failed_section">Failed (%1$d)</string>
     <string name="exporting">Exporting…</string>
     <string name="export_successful">Export successful</string>
     <string name="export_selected_only">Export Selected Data Only</string>
@@ -75,49 +131,6 @@
     <string name="export_reset_filters">Reset</string>
     <string name="export_count_format">%1$d record(s) will be exported</string>
     <string name="export_no_items_match">No records match this filter</string>
-
-    <!-- WiFi print -->
-    <string name="wifi_print">WiFi Print</string>
-    <string name="wifi_discover">Find PC on Network</string>
-    <string name="wifi_discovering">Searching for PCs…</string>
-    <string name="wifi_no_pc_found">No PC found. Make sure Price Tag app is open with WiFi receiver enabled.</string>
-    <string name="wifi_select_pc">Select PC</string>
-    <string name="wifi_send">Send to PC</string>
-    <string name="wifi_sending">Sending…</string>
-    <string name="wifi_done_format">✓ Printed %1$d sheet(s)</string>
-    <string name="wifi_busy">PC is busy. Try again shortly.</string>
-    <string name="wifi_reset">Reset</string>
-    <string name="wifi_retry">Retry</string>
-    <string name="wifi_cancel">Cancel</string>
-
-    <!-- Preview dialog -->
-    <string name="preview_title">Print Preview</string>
-    <string name="preview_ready_format">%1$d item(s) ready to print</string>
-    <string name="preview_col_item_code">Item Code</string>
-    <string name="preview_col_description">Description</string>
-    <string name="preview_col_price">Price</string>
-    <string name="preview_col_copies">Copies</string>
-    <string name="preview_print">Print</string>
-    <string name="preview_cancel">Cancel</string>
-
-    <!-- Error / decision dialog -->
-    <string name="error_dialog_title">Some Items Failed</string>
-    <string name="error_ready_format">%1$d item(s) ready</string>
-    <string name="error_failed_format">%1$d item(s) failed</string>
-    <string name="error_failed_items_header">Failed Items</string>
-    <string name="error_reason_format">Row %1$d: %2$s — %3$s</string>
-    <string name="error_cancel_all">Cancel Entire Job</string>
-    <string name="error_print_ready">Print Ready Items Only</string>
-
-    <!-- Print history -->
-    <string name="print_history">Recent Print Jobs</string>
-    <string name="print_history_short">Print Jobs</string>
-    <string name="print_history_empty">No print jobs yet.\nSend a CSV to your PC via WiFi to start.</string>
-    <string name="print_jobs">job(s)</string>
-    <string name="print_job_sheets_format">%1$d page(s)</string>
-    <string name="print_job_items_format">%1$d item(s)</string>
-    <string name="print_job_delete_confirm">Delete this print job from history?</string>
-    <string name="reprint">Reprint</string>
 
     <!-- Backup & Restore screen -->
     <string name="backup_restore">Backup &amp; Restore</string>
@@ -174,25 +187,25 @@
     <string name="data_management">Data Management</string>
     <string name="clear_all_records">Clear All Records</string>
     <string name="clear_all_records_confirm">This action cannot be undone. Are you sure?</string>
-    <string name="language">Language</string>    <string name="language_description">Choose the app\'s display language.</string>
+    <string name="language">Language</string>
+    <string name="language_description">Choose the app\'s display language.</string>
     <string name="language_system_default">System Default</string>
     <string name="language_english">English</string>
     <string name="language_arabic">العربية (Arabic)</string>
-
-    <!-- Catalog update -->
-    <string name="catalog_update">Product Catalog</string>
-    <string name="catalog_last_updated_format">Last updated: %1$s</string>
-    <string name="catalog_item_count_format">%1$d products loaded</string>
-    <string name="catalog_description">Import a new products.db file from your computer to update the product catalog used for barcode lookups. Takes effect immediately — no restart needed.</string>
-    <string name="catalog_import_button">Import products.db from Storage</string>
-    <string name="catalog_importing">Importing…</string>
-    <string name="catalog_import_success_format">Catalog updated — %1$d products loaded</string>
-
-    <!-- WiFi catalog pull -->
-    <string name="catalog_wifi_pull_button">Get Latest Catalog from PC (WiFi)</string>
-    <string name="catalog_wifi_discovering">Searching for PC…</string>
-    <string name="catalog_wifi_downloading">Downloading catalog…</string>
-    <string name="catalog_wifi_success_format">✓ Catalog updated — %1$d products loaded</string>
-    <string name="catalog_wifi_error_retry">Retry</string>
-    <string name="catalog_empty_hint">No catalog loaded yet. Use "Get Latest Catalog from PC" or import a products.db file.</string>
+    <string name="wifi_history_today_totals">Today: %1$d pages • %2$d failed</string>
+    <string name="wifi_history_range_all">All</string>
+    <string name="wifi_history_range_today">Today</string>
+    <string name="wifi_history_range_week">7 days</string>
+    <string name="wifi_history_range_month">30 days</string>
+    <string name="update_catalog">Update product catalog</string>
+    <string name="update_catalog_hint">Import an updated catalog (CSV exported from the master, or a products.db file).</string>
+    <string name="update_catalog_wifi">Get latest catalog from PC (WiFi)</string>
+    <string name="catalog_import_done">Catalog updated — %1$d products</string>
+    <string name="wifi_resend_last">Re-send last batch</string>
+    <string name="wifi_review_title">Will print (%1$d items)</string>
+    <string name="wifi_review_pos">POS</string>
+    <string name="wifi_review_eng">English</string>
+    <string name="wifi_review_unit">Unit</string>
+    <string name="wifi_review_copies">Copies</string>
+    <string name="wifi_review_more">+ %1$d more…</string>
 </resources>

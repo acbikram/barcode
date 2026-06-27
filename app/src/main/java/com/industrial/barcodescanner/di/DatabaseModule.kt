@@ -19,6 +19,3 @@ object DatabaseModule {
         return BarcodeDatabase.getInstance(context)
     }
 }
-
-// PrintHistoryManager is @Singleton and @Inject-constructor, so Hilt
-// provides it automatically — no explicit @Provides needed here.

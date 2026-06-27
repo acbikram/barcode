@@ -45,6 +45,14 @@ fun BackupRestoreScreen(
         }
     }
 
+    val catalogLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            viewModel.importCatalogFromUri(context, uri)
+        }
+    }
+
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.backup_restore)) }) },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -71,6 +79,27 @@ fun BackupRestoreScreen(
                     enabled = !uiState.isLoading
                 ) {
                     Text(stringResource(R.string.restore_database))
+                }
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                Text(
+                    stringResource(R.string.update_catalog_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Button(
+                    onClick = { catalogLauncher.launch(arrayOf("*/*")) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !uiState.isLoading
+                ) {
+                    Text(stringResource(R.string.update_catalog))
+                }
+                OutlinedButton(
+                    onClick = { viewModel.pullCatalogFromPc() },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !uiState.isLoading
+                ) {
+                    Text(stringResource(R.string.update_catalog_wifi))
                 }
             }
 
@@ -110,9 +139,12 @@ fun BackupRestoreScreen(
     }
 
     if (uiState.success) {
+        val successMsg = uiState.catalogCount?.let {
+            stringResource(R.string.catalog_import_done, it)
+        } ?: operationSuccessMsg
         LaunchedEffect(Unit) {
             scope.launch {
-                snackbarHostState.showSnackbar(operationSuccessMsg)
+                snackbarHostState.showSnackbar(successMsg)
                 viewModel.resetSuccess()
             }
         }

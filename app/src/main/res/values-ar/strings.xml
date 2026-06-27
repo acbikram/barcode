@@ -65,6 +65,62 @@
     <string name="total_records_count_format">إجمالي السجلات: %1$d</string>
     <string name="save_csv">حفظ ملف CSV</string>
     <string name="share_csv">مشاركة ملف CSV</string>
+    <string name="share_wifi">مشاركة عبر الواي فاي</string>
+    <string name="wifi_dialog_title">الإرسال إلى الكمبيوتر عبر الواي فاي</string>
+    <string name="wifi_dialog_hint">أدخل عنوان IP والمنفذ الظاهر على الكمبيوتر ضمن الطباعة الدفعية ← ‎+WiFi. يجب أن يكون الجهازان على نفس شبكة الواي فاي.</string>
+    <string name="wifi_server_ip">عنوان IP للكمبيوتر</string>
+    <string name="wifi_port">المنفذ</string>
+    <string name="wifi_send">إرسال</string>
+    <string name="wifi_invalid_input">أدخل عنوان IP ومنفذًا صحيحين</string>
+    <string name="wifi_sent_format">تم إرسال %1$d سجل إلى %2$s</string>
+    <string name="wifi_failed_format">فشل الإرسال عبر الواي فاي: %1$s</string>
+    <string name="wifi_working_title">مشاركة عبر الواي فاي</string>
+    <string name="wifi_stage_connecting">جارٍ الاتصال بالكمبيوتر…</string>
+    <string name="wifi_stage_checking">جارٍ التحقق من الأسعار على الكمبيوتر…</string>
+    <string name="wifi_stage_printing">جارٍ الطباعة على الكمبيوتر…</string>
+    <string name="wifi_row_label">صف</string>
+    <string name="wifi_some_failed_title">تعذّرت طباعة بعض الأصناف</string>
+    <string name="wifi_ready_count">%1$d صنف جاهز للطباعة.</string>
+    <string name="wifi_print_ready_format">طباعة الأصناف الجاهزة (%1$d)</string>
+    <string name="wifi_none_printable_title">تعذّرت طباعة أي صنف</string>
+    <string name="wifi_retry">إعادة المحاولة</string>
+    <string name="wifi_printed_title_format">تمت طباعة %1$d صنف</string>
+    <string name="wifi_retry_prompt">تعذّرت طباعة %1$d صنف. هل تريد إعادة المحاولة الآن؟</string>
+    <string name="wifi_retry_yes">نعم، أعد المحاولة</string>
+    <string name="wifi_retry_no">لا</string>
+    <string name="wifi_empty">لا يوجد شيء محدد للإرسال</string>
+    <string name="wifi_busy">الكمبيوتر مشغول — حاول مرة أخرى بعد قليل</string>
+    <string name="wifi_cancelled">تم الإلغاء — لم تتم الطباعة</string>
+    <string name="wifi_done">تم</string>
+    <string name="wifi_printed_format">تمت طباعة %1$d صنف</string>
+    <string name="wifi_printed_rest_cancelled_format">تمت طباعة %1$d صنف؛ وتم إلغاء الباقي</string>
+    <string name="wifi_find_pcs">🔍 البحث عن أجهزة في الشبكة</string>
+    <string name="wifi_searching">جارٍ البحث…</string>
+    <string name="wifi_test">اختبار الاتصال</string>
+    <string name="wifi_testing">جارٍ الاختبار…</string>
+    <string name="wifi_no_pcs">لم يتم العثور على أجهزة. تأكد من تفعيل مستقبل الواي فاي على الكمبيوتر ضمن نفس الشبكة.</string>
+    <string name="wifi_test_ok_format">تم الاتصال بـ %1$s ✓</string>
+    <string name="wifi_test_fail_format">تعذّر الوصول إلى الكمبيوتر: %1$s</string>
+    <string name="wifi_reprint_title_format">تعذّرت طباعة %1$d ورقة</string>
+    <string name="wifi_reprint_prompt">تعذّرت طباعة %1$d ورقة (خطأ في الطابعة) بعد طباعة %2$d. هل تريد إعادة طباعتها؟</string>
+    <string name="wifi_reprint_yes">إعادة الطباعة</string>
+    <string name="wifi_reprint_skip">تخطٍّ</string>
+    <string name="wifi_history_button">🖨 سجل الطباعة عبر الواي فاي</string>
+    <string name="wifi_history_title">سجل الطباعة عبر الواي فاي</string>
+    <string name="wifi_history_empty">لا يوجد سجل طباعة عبر الواي فاي بعد. ستظهر هنا الأصناف التي ترسلها عبر مشاركة الواي فاي.</string>
+    <string name="wifi_history_clear">مسح السجل</string>
+    <string name="wifi_history_clear_confirm">حذف كل سجل الطباعة عبر الواي فاي؟ لا يمكن التراجع.</string>
+    <string name="wifi_history_pos">الرمز</string>
+    <string name="wifi_history_printed">✓ تمت الطباعة</string>
+    <string name="wifi_history_failed_format">✗ فشل: %1$s</string>
+    <string name="wifi_history_reprint">إعادة الطباعة</string>
+    <string name="wifi_unreachable">تعذّر الوصول إلى الكمبيوتر. تأكد من تشغيله وتفعيل مستقبل الواي فاي على نفس الشبكة.</string>
+    <string name="wifi_history_search_hint">ابحث بالرمز أو الوصف أو التاريخ…</string>
+    <string name="wifi_history_job_summary">طُبعت %1$d صفحة • %2$d فشلت</string>
+    <string name="wifi_history_delete_job">حذف هذه العملية</string>
+    <string name="wifi_history_reprint_job">إعادة طباعة كامل العملية</string>
+    <string name="wifi_history_retry_failed">إعادة محاولة الفاشلة</string>
+    <string name="wifi_history_failed_section">فشلت (%1$d)</string>
     <string name="exporting">جاري التصدير…</string>
     <string name="export_successful">تم التصدير بنجاح</string>
     <string name="export_selected_only">تصدير البيانات المحددة فقط</string>
@@ -75,49 +131,6 @@
     <string name="export_reset_filters">إعادة تعيين</string>
     <string name="export_count_format">سيتم تصدير %1$d سجل</string>
     <string name="export_no_items_match">لا توجد سجلات مطابقة لهذا الفلتر</string>
-
-    <!-- طباعة عبر WiFi -->
-    <string name="wifi_print">طباعة عبر WiFi</string>
-    <string name="wifi_discover">البحث عن الحاسوب</string>
-    <string name="wifi_discovering">جاري البحث…</string>
-    <string name="wifi_no_pc_found">لم يتم العثور على حاسوب. تأكد من تشغيل برنامج الطباعة وتفعيل استقبال WiFi.</string>
-    <string name="wifi_select_pc">اختر الحاسوب</string>
-    <string name="wifi_send">إرسال إلى الحاسوب</string>
-    <string name="wifi_sending">جاري الإرسال…</string>
-    <string name="wifi_done_format">✓ تمت طباعة %1$d صفحة</string>
-    <string name="wifi_busy">الحاسوب مشغول. حاول مرة أخرى.</string>
-    <string name="wifi_reset">إعادة تعيين</string>
-    <string name="wifi_retry">إعادة المحاولة</string>
-    <string name="wifi_cancel">إلغاء</string>
-
-    <!-- معاينة قبل الطباعة -->
-    <string name="preview_title">معاينة قبل الطباعة</string>
-    <string name="preview_ready_format">%1$d عنصر جاهز للطباعة</string>
-    <string name="preview_col_item_code">رمز الصنف</string>
-    <string name="preview_col_description">الوصف</string>
-    <string name="preview_col_price">السعر</string>
-    <string name="preview_col_copies">النسخ</string>
-    <string name="preview_print">طباعة</string>
-    <string name="preview_cancel">إلغاء</string>
-
-    <!-- نافذة الأخطاء -->
-    <string name="error_dialog_title">فشل بعض العناصر</string>
-    <string name="error_ready_format">%1$d عنصر جاهز</string>
-    <string name="error_failed_format">%1$d عنصر فشل</string>
-    <string name="error_failed_items_header">العناصر الفاشلة</string>
-    <string name="error_reason_format">صف %1$d: %2$s — %3$s</string>
-    <string name="error_cancel_all">إلغاء المهمة كلها</string>
-    <string name="error_print_ready">طباعة العناصر الجاهزة فقط</string>
-
-    <!-- سجل الطباعة -->
-    <string name="print_history">سجل مهام الطباعة</string>
-    <string name="print_history_short">الطباعة</string>
-    <string name="print_history_empty">لا توجد مهام طباعة بعد.</string>
-    <string name="print_jobs">مهمة</string>
-    <string name="print_job_sheets_format">%1$d صفحة</string>
-    <string name="print_job_items_format">%1$d عنصر</string>
-    <string name="print_job_delete_confirm">حذف مهمة الطباعة هذه من السجل؟</string>
-    <string name="reprint">إعادة الطباعة</string>
 
     <!-- شاشة النسخ الاحتياطي والاستعادة -->
     <string name="backup_restore">نسخ احتياطي واستعادة</string>
@@ -179,21 +192,20 @@
     <string name="language_system_default">لغة النظام</string>
     <string name="language_english">English (الإنجليزية)</string>
     <string name="language_arabic">العربية</string>
-
-    <!-- تحديث الكتالوج -->
-    <string name="catalog_update">كتالوج المنتجات</string>
-    <string name="catalog_last_updated_format">آخر تحديث: %1$s</string>
-    <string name="catalog_item_count_format">تم تحميل %1$d منتج</string>
-    <string name="catalog_description">استيراد ملف products.db جديد لتحديث الكتالوج فوراً بدون إعادة تشغيل.</string>
-    <string name="catalog_import_button">استيراد products.db من التخزين</string>
-    <string name="catalog_importing">جاري الاستيراد…</string>
-    <string name="catalog_import_success_format">تم التحديث — %1$d منتج محمّل</string>
-
-    <!-- سحب الكتالوج عبر WiFi -->
-    <string name="catalog_wifi_pull_button">جلب أحدث كتالوج من الحاسوب (WiFi)</string>
-    <string name="catalog_wifi_discovering">جاري البحث عن الحاسوب…</string>
-    <string name="catalog_wifi_downloading">جاري تنزيل الكتالوج…</string>
-    <string name="catalog_wifi_success_format">✓ تم التحديث — %1$d منتج محمّل</string>
-    <string name="catalog_wifi_error_retry">إعادة المحاولة</string>
-    <string name="catalog_empty_hint">لم يتم تحميل أي كتالوج بعد. استخدم "جلب الكتالوج من الحاسوب" أو استورد ملف products.db.</string>
+    <string name="wifi_history_today_totals">اليوم: %1$d صفحة • %2$d فشلت</string>
+    <string name="wifi_history_range_all">الكل</string>
+    <string name="wifi_history_range_today">اليوم</string>
+    <string name="wifi_history_range_week">٧ أيام</string>
+    <string name="wifi_history_range_month">٣٠ يوم</string>
+    <string name="update_catalog">تحديث كتالوج المنتجات</string>
+    <string name="update_catalog_hint">استورد كتالوجاً محدّثاً (ملف CSV مُصدَّر من الماستر، أو ملف products.db).</string>
+    <string name="update_catalog_wifi">احصل على أحدث كتالوج من الكمبيوتر (واي فاي)</string>
+    <string name="catalog_import_done">تم تحديث الكتالوج — %1$d منتج</string>
+    <string name="wifi_resend_last">إعادة إرسال آخر دفعة</string>
+    <string name="wifi_review_title">سيُطبع (%1$d صنف)</string>
+    <string name="wifi_review_pos">الكود</string>
+    <string name="wifi_review_eng">إنجليزي</string>
+    <string name="wifi_review_unit">الوحدة</string>
+    <string name="wifi_review_copies">نسخ</string>
+    <string name="wifi_review_more">+ %1$d المزيد…</string>
 </resources>

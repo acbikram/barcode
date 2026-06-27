@@ -3,8 +3,7 @@ name: Android CI
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:        # lets you run a build manually from the Actions tab
 
 jobs:
   build:
@@ -23,18 +22,18 @@ jobs:
       with:
         gradle-version: 8.7
 
-    - name: Decode keystore
-      run: echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+    - name: Decode signing keystore
       env:
         KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      run: echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
 
-    - name: Build release APK
-      run: gradle assembleRelease
+    - name: Build signed release APK
       env:
         KEYSTORE_FILE: ${{ runner.temp }}/release.jks
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: gradle assembleRelease
 
     - name: Upload APK
       uses: actions/upload-artifact@v4

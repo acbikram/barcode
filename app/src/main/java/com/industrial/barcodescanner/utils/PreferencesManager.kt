@@ -25,6 +25,9 @@ class PreferencesManager @Inject constructor(@ApplicationContext private val con
     private val languagePromptShownKey = booleanPreferencesKey("language_prompt_shown")
     private val lastTagTypeKey = stringPreferencesKey("last_tag_type")
     private val lastUnitTypeKey = stringPreferencesKey("last_unit_type")
+    private val wifiHostKey = stringPreferencesKey("wifi_host")
+    private val wifiPortKey = stringPreferencesKey("wifi_port")
+    private val lastBatchCsvKey = stringPreferencesKey("last_batch_csv")
 
     val scanSoundFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[scanSoundKey] ?: true
@@ -77,6 +80,35 @@ class PreferencesManager @Inject constructor(@ApplicationContext private val con
     fun getLastUnitType(): String = runCatching {
         runBlocking { context.dataStore.data.map { it[lastUnitTypeKey] ?: "PCS" }.first() }
     }.getOrDefault("PCS")
+
+    /**
+     * Remembers the last PC address used by "Share WiFi" so the dialog
+     * pre-fills it next time. Port defaults to 8765 (the PC's default).
+     */
+    suspend fun setWifiHost(host: String) {
+        context.dataStore.edit { prefs -> prefs[wifiHostKey] = host }
+    }
+
+    suspend fun setWifiPort(port: String) {
+        context.dataStore.edit { prefs -> prefs[wifiPortKey] = port }
+    }
+
+    fun getWifiHost(): String = runCatching {
+        runBlocking { context.dataStore.data.map { it[wifiHostKey] ?: "" }.first() }
+    }.getOrDefault("")
+
+    fun getWifiPort(): String = runCatching {
+        runBlocking { context.dataStore.data.map { it[wifiPortKey] ?: "8765" }.first() }
+    }.getOrDefault("8765")
+
+    /** Stores the most recently sent batch CSV so it can be re-sent later. */
+    suspend fun setLastBatchCsv(csv: String) {
+        context.dataStore.edit { prefs -> prefs[lastBatchCsvKey] = csv }
+    }
+
+    fun getLastBatchCsv(): String = runCatching {
+        runBlocking { context.dataStore.data.map { it[lastBatchCsvKey] ?: "" }.first() }
+    }.getOrDefault("")
 
     /**
      * Synchronous helpers used by the ViewModel.

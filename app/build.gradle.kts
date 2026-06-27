@@ -14,28 +14,47 @@ android {
         applicationId = "com.industrial.barcodescanner"
         minSdk = 29
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 4
+        versionName = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Real phones are ARM. Dropping x86/x86_64 removes the unused copies of
+        // the scanner's native libraries and noticeably shrinks the APK, while
+        // keeping a single universal APK for your download-one-file workflow.
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+        }
+    }
+
+    val keystorePath = System.getenv("KEYSTORE_FILE")
+    val hasKeystore = keystorePath != null && file(keystorePath).let { it.exists() && it.length() > 0 }
+
+    signingConfigs {
+        create("release") {
+            if (hasKeystore) {
+                storeFile = file(keystorePath!!)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            // Keep R8 off so nothing gets stripped — favors "just works" over size.
+            isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            val keystoreFile = System.getenv("KEYSTORE_FILE")
-            if (keystoreFile != null) {
-                signingConfig = signingConfigs.create("release").apply {
-                    storeFile = file(keystoreFile)
-                    storePassword = System.getenv("KEYSTORE_PASSWORD")
-                    keyAlias = System.getenv("KEY_ALIAS")
-                    keyPassword = System.getenv("KEY_PASSWORD")
-                }
-            }
+            // Use your own release key when the CI keystore is present; otherwise
+            // fall back to the debug key so local builds still produce an APK.
+            signingConfig = if (hasKeystore)
+                signingConfigs.getByName("release")
+            else
+                signingConfigs.getByName("debug")
         }
     }
 
