@@ -95,7 +95,7 @@ class BackupRestoreViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null, success = false, catalogCount = null) }
             try {
                 val count = withContext(Dispatchers.IO) {
-                    val pc = WifiDiscovery.discover(2000).firstOrNull()
+                    val pc = WifiDiscovery.discover(context, 2500).firstOrNull()
                         ?: throw IllegalStateException(
                             "No PC found on the network. Make sure the PC app's WiFi receiver is ON and the phone is on the same WiFi.")
                     val tmp = java.io.File.createTempFile("catalog_pull", ".db")

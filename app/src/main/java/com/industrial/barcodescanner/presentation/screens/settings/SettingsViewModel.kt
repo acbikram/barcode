@@ -127,7 +127,7 @@ class SettingsViewModel @Inject constructor(
                 it.copy(wifiCatalogState = WifiCatalogState.DISCOVERING,
                     wifiCatalogProgress = 0f, wifiCatalogStatus = "Searching for PC…")
             }
-            val pcs = withContext(Dispatchers.IO) { WifiDiscovery.discover(2000) }
+            val pcs = withContext(Dispatchers.IO) { WifiDiscovery.discover(context, 2500) }
             if (pcs.isEmpty()) {
                 _uiState.update {
                     it.copy(wifiCatalogState = WifiCatalogState.ERROR,

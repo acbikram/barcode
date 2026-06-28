@@ -99,6 +99,7 @@
     <string name="wifi_test">اختبار الاتصال</string>
     <string name="wifi_testing">جارٍ الاختبار…</string>
     <string name="wifi_no_pcs">لم يتم العثور على أجهزة. تأكد من تفعيل مستقبل الواي فاي على الكمبيوتر ضمن نفس الشبكة.</string>
+    <string name="wifi_no_pcs_hint">لم يتم العثور على الكمبيوتر؟ تأكد من تشغيل برنامج الطباعة مع تفعيل مستقبل WiFi، ثم أدخل عنوان IP يدوياً أدناه.</string>
     <string name="wifi_test_ok_format">تم الاتصال بـ %1$s ✓</string>
     <string name="wifi_test_fail_format">تعذّر الوصول إلى الكمبيوتر: %1$s</string>
     <string name="wifi_reprint_title_format">تعذّرت طباعة %1$d ورقة</string>

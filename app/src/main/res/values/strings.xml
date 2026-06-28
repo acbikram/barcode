@@ -99,6 +99,7 @@
     <string name="wifi_test">Test connection</string>
     <string name="wifi_testing">Testing…</string>
     <string name="wifi_no_pcs">No PCs found. Make sure the PC has the WiFi receiver enabled on the same network.</string>
+    <string name="wifi_no_pcs_hint">PC not found? Make sure the Price Tag app is open with WiFi receiver ON, then enter the PC IP address manually below and tap Connect.</string>
     <string name="wifi_test_ok_format">Connected to %1$s ✓</string>
     <string name="wifi_test_fail_format">Can\'t reach PC: %1$s</string>
     <string name="wifi_reprint_title_format">%1$d sheet(s) didn\'t print</string>

@@ -148,20 +148,54 @@ object WifiDiscovery {
     private const val DISCOVERY_PORT = 8765
     private val REQUEST = "PTAGWHO1".toByteArray(Charsets.US_ASCII)
 
-    fun discover(timeoutMs: Int = 1500): List<WifiPc> {
+    /**
+     * Discovers Price Tag PCs on the local network.
+     *
+     * Sends the PTAGWHO1 discovery packet to:
+     *   1. The subnet broadcast address (e.g. 192.168.1.255) — most reliable on Android
+     *   2. 255.255.255.255 — global broadcast (blocked by some routers/Android versions)
+     *   3. The PC's direct IP if [knownIp] is provided — works even when broadcast is blocked
+     *
+     * Android often blocks 255.255.255.255 broadcasts; the subnet broadcast
+     * address obtained from WifiManager's DHCP info is far more reliable.
+     */
+    fun discover(
+        context: android.content.Context? = null,
+        timeoutMs: Int = 2500,
+        knownIp: String? = null,
+        knownPort: Int = DISCOVERY_PORT
+    ): List<WifiPc> {
         val found = LinkedHashMap<String, WifiPc>()
         var sock: DatagramSocket? = null
         try {
             sock = DatagramSocket().apply {
                 broadcast = true
-                soTimeout = 400
+                soTimeout = 500
             }
-            sock.send(
-                DatagramPacket(
-                    REQUEST, REQUEST.size,
-                    InetAddress.getByName("255.255.255.255"), DISCOVERY_PORT
-                )
-            )
+
+            // Build the list of addresses to probe
+            val targets = mutableListOf<InetAddress>()
+
+            // 1. Subnet broadcast (most reliable on Android)
+            val subnetBroadcast = getSubnetBroadcast(context)
+            if (subnetBroadcast != null) targets.add(subnetBroadcast)
+
+            // 2. Global broadcast
+            targets.add(InetAddress.getByName("255.255.255.255"))
+
+            // 3. Direct IP — works even when broadcast is fully blocked
+            if (!knownIp.isNullOrBlank()) {
+                runCatching { targets.add(InetAddress.getByName(knownIp)) }
+            }
+
+            // Send to all targets
+            for (target in targets) {
+                runCatching {
+                    sock.send(DatagramPacket(REQUEST, REQUEST.size, target, DISCOVERY_PORT))
+                }
+            }
+
+            // Collect replies until the deadline
             val deadline = System.currentTimeMillis() + timeoutMs
             val buf = ByteArray(2048)
             while (System.currentTimeMillis() < deadline) {
@@ -169,21 +203,74 @@ object WifiDiscovery {
                     val resp = DatagramPacket(buf, buf.size)
                     sock.receive(resp)
                     val o = JSONObject(String(resp.data, 0, resp.length, Charsets.UTF_8))
+                    val ip = o.optString("ip", "").ifBlank { resp.address?.hostAddress ?: "" }
                     val pc = WifiPc(
-                        o.optString("name", "PC"),
-                        o.optString("ip", ""),
-                        o.optInt("port", 8765)
+                        name = o.optString("name", "PC"),
+                        ip   = ip,
+                        port = o.optInt("port", DISCOVERY_PORT)
                     )
                     if (pc.ip.isNotBlank()) found["${pc.ip}:${pc.port}"] = pc
                 } catch (_: SocketTimeoutException) {
                     // keep polling until the overall deadline
                 }
             }
+
+            // If broadcast found nothing but we have a known IP, ping it directly
+            if (found.isEmpty() && !knownIp.isNullOrBlank()) {
+                runCatching {
+                    val direct = pingDirect(knownIp, knownPort, sock)
+                    if (direct != null) found["${direct.ip}:${direct.port}"] = direct
+                }
+            }
         } catch (_: Exception) {
-            // return whatever we found
         } finally {
-            try { sock?.close() } catch (_: Exception) {}
+            runCatching { sock?.close() }
         }
         return found.values.toList()
+    }
+
+    /**
+     * Returns the subnet broadcast address derived from the device's current
+     * WiFi DHCP info (e.g. for 192.168.1.100/24 returns 192.168.1.255).
+     * Returns null if unavailable or not on WiFi.
+     */
+    private fun getSubnetBroadcast(context: android.content.Context?): InetAddress? {
+        context ?: return null
+        return try {
+            val wm = context.applicationContext
+                .getSystemService(android.content.Context.WIFI_SERVICE)
+                    as? android.net.wifi.WifiManager ?: return null
+            val dhcp = wm.dhcpInfo ?: return null
+            if (dhcp.ipAddress == 0) return null
+            // broadcast = (ip & netmask) | (~netmask)
+            val broadcast = (dhcp.ipAddress and dhcp.netmask) or dhcp.netmask.inv()
+            InetAddress.getByName(
+                "${broadcast and 0xFF}." +
+                "${(broadcast shr 8) and 0xFF}." +
+                "${(broadcast shr 16) and 0xFF}." +
+                "${(broadcast shr 24) and 0xFF}"
+            )
+        } catch (_: Exception) { null }
+    }
+
+    /**
+     * Sends a discovery packet directly to [ip]:[port] and waits up to 1 second
+     * for a PTAGWHO1 reply. Used as a fallback when broadcast is blocked.
+     */
+    private fun pingDirect(ip: String, port: Int, sock: DatagramSocket): WifiPc? {
+        return try {
+            val addr = InetAddress.getByName(ip)
+            sock.soTimeout = 1000
+            sock.send(DatagramPacket(REQUEST, REQUEST.size, addr, port))
+            val buf = ByteArray(2048)
+            val resp = DatagramPacket(buf, buf.size)
+            sock.receive(resp)
+            val o = JSONObject(String(resp.data, 0, resp.length, Charsets.UTF_8))
+            WifiPc(
+                name = o.optString("name", ip),
+                ip   = o.optString("ip", ip),
+                port = o.optInt("port", port)
+            )
+        } catch (_: Exception) { null }
     }
 }

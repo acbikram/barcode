@@ -397,7 +397,7 @@ class ExportViewModel @Inject constructor(
     fun discoverPcs() {
         viewModelScope.launch {
             _uiState.update { it.copy(discovering = true, discovered = emptyList()) }
-            val pcs = withContext(Dispatchers.IO) { WifiDiscovery.discover(1500) }
+            val pcs = withContext(Dispatchers.IO) { WifiDiscovery.discover(context, 2500, preferencesManager.getWifiHost().ifBlank { null }) }
             _uiState.update {
                 it.copy(discovering = false, discovered = pcs,
                     wifiInfo = if (pcs.isEmpty()) "NO_PCS" else null)

@@ -476,6 +476,8 @@ fun ExportScreen(
                             Text(stringResource(R.string.wifi_find_pcs))
                         }
                     }
+
+                    // Show discovered PCs as tappable cards
                     uiState.discovered.forEach { pc ->
                         Surface(
                             onClick = { viewModel.selectPc(pc) },
@@ -491,6 +493,14 @@ fun ExportScreen(
                                 )
                             }
                         }
+                    }
+
+                    // Hint shown after a failed discovery — points user to manual IP entry
+                    if (!uiState.discovering && uiState.discovered.isEmpty() && uiState.wifiHost.isBlank()) {
+                        Text(
+                            stringResource(R.string.wifi_no_pcs_hint),
+                            style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
+                        )
                     }
 
                     OutlinedTextField(
