@@ -31,6 +31,14 @@
 # DataStore
 -keep class androidx.datastore.** { *; }
 
+# WorkManager + Hilt-Work
+-keep class * extends androidx.work.Worker { *; }
+-keep class * extends androidx.work.CoroutineWorker { *; }
+-keep class * extends androidx.work.ListenableWorker { *; }
+-keepclassmembers class * extends androidx.work.ListenableWorker {
+    public <init>(android.content.Context, androidx.work.WorkerParameters);
+}
+
 # Suppress warnings from optional dependencies
 -dontwarn org.bouncycastle.**
 -dontwarn org.conscrypt.**
