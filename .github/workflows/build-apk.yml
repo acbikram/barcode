@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write          # <-- Add this line to allow release creation
     steps:
     - uses: actions/checkout@v4
 
