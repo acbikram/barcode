@@ -70,7 +70,7 @@ object ApkInstaller {
     }
 
     /** Posts a persistent "Update available" notification. */
-    fun postUpdateNotification(context: Context, versionName: String, url: String) {
+    fun postUpdateNotification(context: Context, versionName: String) {
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -83,23 +83,24 @@ object ApkInstaller {
             )
         }
 
-        // Tapping the notification opens Settings (which has the update card)
-        val openSettings = Intent(context,
-            Class.forName("${context.packageName}.presentation.MainActivity")).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            putExtra("open_settings", true)
-        }
-        val pi = PendingIntent.getActivity(
-            context, 0, openSettings,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+        // Tapping the notification opens the app's launcher activity
+        val launchIntent = context.packageManager
+            .getLaunchIntentForPackage(context.packageName)
+            ?.apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP) }
+
+        val pi = if (launchIntent != null) {
+            PendingIntent.getActivity(
+                context, 0, launchIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        } else null
 
         val notif = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
             .setContentTitle("Update available — v$versionName")
-            .setContentText("Tap to update Barcode To CSV")
+            .setContentText("Tap to open Barcode To CSV and update")
             .setAutoCancel(true)
-            .setContentIntent(pi)
+            .apply { if (pi != null) setContentIntent(pi) }
             .build()
 
         nm.notify(NOTIF_ID, notif)

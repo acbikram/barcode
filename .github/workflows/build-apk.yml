@@ -61,5 +61,6 @@ jobs:
         body: "Auto-release from commit ${{ github.sha }}"
         files: app/build/outputs/apk/release/app-release.apk
         make_latest: true
+        overwrite: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -48,6 +48,7 @@ class SettingsViewModel @Inject constructor(
         // App update
         val updateState: UpdateState = UpdateState.IDLE,
         val updateVersionName: String = "",
+        val updateApkUrl: String = "",          // stored so download doesn't need re-check
         val updateDownloadProgress: Int = 0,
         val updateError: String = ""
     )
@@ -168,7 +169,10 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun resetWifiCatalogState() {
+    private fun currentVersionCode(): Int {
+        val info = context.packageManager.getPackageInfo(context.packageName, 0)
+        return androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(info).toInt()
+    }
         _uiState.update {
             it.copy(wifiCatalogState = WifiCatalogState.IDLE, wifiCatalogProgress = 0f, wifiCatalogStatus = "")
         }
@@ -180,19 +184,19 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(updateState = UpdateState.CHECKING, updateError = "") }
             val currentCode = context.packageManager
-                .getPackageInfo(context.packageName, 0).versionCode
+                .getPackageInfo(context.packageName, 0).let { androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it).toInt() }
             when (val result = UpdateChecker.check(currentCode)) {
                 is UpdateChecker.CheckResult.UpdateAvailable -> {
                     val info = result.info
                     _uiState.update {
                         it.copy(
                             updateState = UpdateState.AVAILABLE,
-                            updateVersionName = info.latestVersionName
+                            updateVersionName = info.latestVersionName,
+                            updateApkUrl = info.apkDownloadUrl
                         )
                     }
-                    // Also fire a notification so user sees it even if they leave Settings
                     ApkInstaller.postUpdateNotification(
-                        context, info.latestVersionName, info.apkDownloadUrl
+                        context, info.latestVersionName
                     )
                 }
                 UpdateChecker.CheckResult.UpToDate ->
@@ -204,29 +208,28 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun downloadAndInstallUpdate() {
+        val apkUrl = _uiState.value.updateApkUrl
+        val versionName = _uiState.value.updateVersionName
+        if (apkUrl.isBlank()) { checkForUpdate(); return }
+
         viewModelScope.launch {
             _uiState.update { it.copy(updateState = UpdateState.DOWNLOADING, updateDownloadProgress = 0) }
-            val currentCode = context.packageManager
-                .getPackageInfo(context.packageName, 0).versionCode
             try {
-                // Re-fetch latest to get the URL (avoids storing it in state)
-                val result = UpdateChecker.check(currentCode)
-                if (result is UpdateChecker.CheckResult.UpdateAvailable) {
-                    ApkInstaller.downloadAndInstall(
-                        context  = context,
-                        url      = result.info.apkDownloadUrl,
-                        versionName = result.info.latestVersionName,
-                        onProgress = { pct ->
-                            _uiState.update { it.copy(updateDownloadProgress = pct) }
-                        }
-                    )
-                    // State stays DOWNLOADING until user installs & app restarts
-                } else {
-                    _uiState.update { it.copy(updateState = UpdateState.UP_TO_DATE) }
-                }
+                ApkInstaller.downloadAndInstall(
+                    context     = context,
+                    url         = apkUrl,
+                    versionName = versionName,
+                    onProgress  = { pct ->
+                        _uiState.update { it.copy(updateDownloadProgress = pct) }
+                    }
+                )
+                // State stays DOWNLOADING until user taps Install and app restarts
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(updateState = UpdateState.ERROR, updateError = e.message ?: "Download failed")
+                    it.copy(
+                        updateState = UpdateState.ERROR,
+                        updateError = e.message ?: "Download failed"
+                    )
                 }
             }
         }
