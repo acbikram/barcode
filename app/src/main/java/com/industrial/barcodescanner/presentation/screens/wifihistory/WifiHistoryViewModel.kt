@@ -128,31 +128,28 @@ class WifiHistoryViewModel @Inject constructor(
         val rows = ArrayList<String>()
         var skipped = 0
         for (e in entities) {
-            val arr = try {
-                JSONArray(e.itemsJson)
-            } catch (_: Exception) {
-                // itemsJson is corrupted — fall back to the entity's own top-level fields
-                skipped++
-                val pos = e.posCode.ifBlank { continue }
-                rows.add("$pos,,${e.tagType},${e.unitType},${e.copies},,")
+            val arr = try { JSONArray(e.itemsJson) } catch (_: Exception) { null }
+
+            if (arr == null || arr.length() == 0) {
+                // itemsJson missing or corrupted — fall back to entity's own fields
+                if (arr == null) skipped++
+                val pos = e.posCode
+                if (pos.isNotBlank()) rows.add("$pos,,${e.tagType},${e.unitType},${e.copies},,")
                 continue
             }
-            if (arr.length() == 0) {
-                // No items array stored — use entity fields directly
-                val pos = e.posCode.ifBlank { continue }
-                rows.add("$pos,,${e.tagType},${e.unitType},${e.copies},,")
-                continue
-            }
+
             for (i in 0 until arr.length()) {
-                val o = arr.optJSONObject(i) ?: continue
-                val pos = o.optString("pos", "").ifBlank { skipped++; continue }
-                val unit = o.optString("unit", e.unitType)
-                val copies = o.optInt("copies", 1)
+                val o = arr.optJSONObject(i)
+                if (o == null) { skipped++; continue }
+                val pos = o.optString("pos", "")
+                if (pos.isBlank()) { skipped++; continue }
+                val unit   = o.optString("unit",   e.unitType)
+                val copies = o.optInt  ("copies",  1)
                 rows.add("$pos,,${e.tagType},$unit,$copies,,")
             }
         }
         if (skipped > 0) {
-            android.util.Log.w("WifiReprintBus", "buildCsv: $skipped row(s) skipped due to missing data")
+            android.util.Log.w("WifiReprintBus", "buildCsv: $skipped row(s) skipped")
         }
         return (listOf(header) + rows).joinToString("\n") + "\n"
     }
