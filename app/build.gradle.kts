@@ -47,7 +47,7 @@ android {
             // The rules below keep all third-party libraries that use reflection.
             isMinifyEnabled = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
+                getDefaultProguardFile("proguard-android.txt"),
                 "proguard-rules.pro"
             )
             // Use your own release key when the CI keystore is present; otherwise

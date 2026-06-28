@@ -35,9 +35,11 @@
 -keep class * extends androidx.work.Worker { *; }
 -keep class * extends androidx.work.CoroutineWorker { *; }
 -keep class * extends androidx.work.ListenableWorker { *; }
+-keep class androidx.work.** { *; }
 -keepclassmembers class * extends androidx.work.ListenableWorker {
     public <init>(android.content.Context, androidx.work.WorkerParameters);
 }
+-keep class com.industrial.barcodescanner.utils.UpdateCheckWorker { *; }
 
 # Suppress warnings from optional dependencies
 -dontwarn org.bouncycastle.**
