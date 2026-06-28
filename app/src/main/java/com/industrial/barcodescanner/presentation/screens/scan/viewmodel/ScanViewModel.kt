@@ -18,11 +18,14 @@ import com.industrial.barcodescanner.utils.PreferencesManager
 import com.industrial.barcodescanner.utils.SoundManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -37,7 +40,6 @@ class ScanViewModel @Inject constructor(
 ) : ViewModel() {
 
     data class ScanUiState(
-        val recentScans: List<ScannedItem> = emptyList(),
         val scannerInactive: Boolean = false,
         /** Barcode shown on the camera overlay immediately after detection. */
         val detectedBarcode: String = "",
@@ -77,10 +79,14 @@ class ScanViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ScanUiState())
     val uiState: StateFlow<ScanUiState> = _uiState.asStateFlow()
 
-    private var scanTimeoutJob = viewModelScope.launch { }
+    /** Top-20 most recently scanned items, updated automatically by Room. */
+    val recentScans: StateFlow<List<ScannedItem>> = repository.getAllItems()
+        .map { items -> items.sortedByDescending { it.createdAt }.take(20) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private var scanTimeoutJob: Job = Job().also { it.cancel() }
 
     init {
-        loadRecentScans()
         startInactivityTimer()
     }
 
@@ -242,7 +248,6 @@ class ScanViewModel @Inject constructor(
                     updatedAt = System.currentTimeMillis()
                 )
                 repository.insertItem(newItem)
-                loadRecentScans()
                 resetPendingState()
                 startInactivityTimer()
             }
@@ -261,7 +266,6 @@ class ScanViewModel @Inject constructor(
                 productNameArabic = existing.productNameArabic ?: state.pendingProductNameArabic
             )
             repository.updateItem(updated.toEntity())
-            loadRecentScans()
             resetPendingState()
             startInactivityTimer()
         }
@@ -349,7 +353,6 @@ class ScanViewModel @Inject constructor(
                 updatedAt = System.currentTimeMillis()
             )
             repository.updateItem(updated.toEntity())
-            loadRecentScans()
             _uiState.update { it.copy(showEditDialog = false) }
         }
     }
@@ -369,7 +372,6 @@ class ScanViewModel @Inject constructor(
             val state = _uiState.value
             val item = repository.getItemById(state.deleteItemId) ?: return@launch
             repository.deleteItem(item)
-            loadRecentScans()
             _uiState.update { it.copy(showDeleteConfirmDialog = false, deleteItemId = 0) }
         }
     }
@@ -379,14 +381,6 @@ class ScanViewModel @Inject constructor(
     }
 
     // -- Internal helpers --------------------------------------------------------
-
-    private fun loadRecentScans() {
-        viewModelScope.launch {
-            val allItems = repository.getAllItems().first()
-            val items = allItems.sortedByDescending { it.createdAt }.take(20)
-            _uiState.update { it.copy(recentScans = items) }
-        }
-    }
 
     /** Single short vibration (new barcode / pickers). */
     private fun vibrateSingle() {

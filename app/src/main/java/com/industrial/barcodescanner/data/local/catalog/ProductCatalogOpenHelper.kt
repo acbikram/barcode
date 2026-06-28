@@ -65,11 +65,18 @@ class ProductCatalogOpenHelper @Inject constructor(
     }
 
     private fun replaceWithSqlite(input: java.io.InputStream): Int {
-        close()
-        dbFile.parentFile?.mkdirs()
-        File(dbFile.path + "-wal").delete()
-        File(dbFile.path + "-shm").delete()
-        dbFile.outputStream().use { input.copyTo(it) }
+        // Close WAL/SHM journal files and the underlying database connection,
+        // but do NOT call the outer SQLiteOpenHelper.close() since we are a
+        // @Singleton and other coroutines may be mid-read. We take the
+        // synchronized lock so no new reads start while we swap the file.
+        synchronized(this) {
+            // Force-close only the internal database handle.
+            try { super.getWritableDatabase()?.close() } catch (_: Exception) {}
+            File(dbFile.path + "-wal").delete()
+            File(dbFile.path + "-shm").delete()
+            dbFile.parentFile?.mkdirs()
+            dbFile.outputStream().use { input.copyTo(it) }
+        }
         return readableDatabase.rawQuery("SELECT COUNT(*) FROM products", null).use {
             if (it.moveToFirst()) it.getInt(0) else 0
         }

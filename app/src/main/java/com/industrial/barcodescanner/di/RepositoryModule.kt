@@ -1,9 +1,11 @@
 package com.industrial.barcodescanner.di
 
-import com.industrial.barcodescanner.data.repository.ScannedItemRepositoryImpl
 import com.industrial.barcodescanner.data.repository.ProductCatalogRepositoryImpl
-import com.industrial.barcodescanner.domain.repository.ScannedItemRepository
+import com.industrial.barcodescanner.data.repository.ScannedItemRepositoryImpl
+import com.industrial.barcodescanner.data.repository.WifiPrintHistoryRepositoryImpl
 import com.industrial.barcodescanner.domain.repository.ProductCatalogRepository
+import com.industrial.barcodescanner.domain.repository.ScannedItemRepository
+import com.industrial.barcodescanner.domain.repository.WifiPrintHistoryRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -14,11 +16,12 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindScannedItemRepository(impl: ScannedItemRepositoryImpl): ScannedItemRepository
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindProductCatalogRepository(impl: ProductCatalogRepositoryImpl): ProductCatalogRepository
+
+    @Binds @Singleton
+    abstract fun bindWifiPrintHistoryRepository(impl: WifiPrintHistoryRepositoryImpl): WifiPrintHistoryRepository
 }

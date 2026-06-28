@@ -1,9 +1,15 @@
 package com.industrial.barcodescanner.presentation.screens.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,10 +25,12 @@ import com.industrial.barcodescanner.presentation.navigation.Screen
 import com.industrial.barcodescanner.presentation.theme.CyanAccent
 import com.industrial.barcodescanner.presentation.theme.ErrorRed
 import com.industrial.barcodescanner.presentation.theme.GreenAccent
+import com.industrial.barcodescanner.presentation.theme.OrangeAccent
 import com.industrial.barcodescanner.presentation.theme.SubtleGray
 import com.industrial.barcodescanner.presentation.theme.SurfaceDark
 import com.industrial.barcodescanner.presentation.theme.SurfaceVariant
 import com.industrial.barcodescanner.utils.LanguageManager
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,195 +40,182 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showClearDialog by remember { mutableStateOf(false) }
-
-    // ── Language selection ────────────────────────────────────────────────────
     var currentLanguage by remember { mutableStateOf(LanguageManager.getCurrentLanguage()) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) viewModel.importCatalogFromUri(uri)
+    }
+
+    // Show snackbar when import finishes
+    LaunchedEffect(uiState.catalogImportResult) {
+        val result = uiState.catalogImportResult ?: return@LaunchedEffect
+        scope.launch {
+            snackbarHostState.showSnackbar(result)
+            viewModel.clearCatalogImportResult()
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.settings),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = CyanAccent,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+                title = { Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleLarge.copy(color = CyanAccent, fontWeight = FontWeight.Bold)) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
-        bottomBar = { BottomNavigationBar(navController) }
+        bottomBar = { BottomNavigationBar(navController) },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(vertical = 12.dp)
         ) {
-
-            // ── Language ───────────────────────────────────────────────────
+            // ── Language ────────────────────────────────────────────────────
             item {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-                    shape  = RoundedCornerShape(12.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            stringResource(R.string.language),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = CyanAccent,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            stringResource(R.string.language_description),
-                            style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
-                        )
-                        Spacer(Modifier.height(12.dp))
-
-                        LanguageOptionRow(
-                            label = stringResource(R.string.language_system_default),
-                            selected = currentLanguage == LanguageManager.AppLanguage.SYSTEM_DEFAULT,
-                            onClick = {
-                                currentLanguage = LanguageManager.AppLanguage.SYSTEM_DEFAULT
-                                LanguageManager.setLanguage(LanguageManager.AppLanguage.SYSTEM_DEFAULT)
-                            }
-                        )
-                        LanguageOptionRow(
-                            label = stringResource(R.string.language_english),
-                            selected = currentLanguage == LanguageManager.AppLanguage.ENGLISH,
-                            onClick = {
-                                currentLanguage = LanguageManager.AppLanguage.ENGLISH
-                                LanguageManager.setLanguage(LanguageManager.AppLanguage.ENGLISH)
-                            }
-                        )
-                        LanguageOptionRow(
-                            label = stringResource(R.string.language_arabic),
-                            selected = currentLanguage == LanguageManager.AppLanguage.ARABIC,
-                            onClick = {
-                                currentLanguage = LanguageManager.AppLanguage.ARABIC
-                                LanguageManager.setLanguage(LanguageManager.AppLanguage.ARABIC)
-                            }
-                        )
-                    }
-                }
-            }
-
-            // ── Scan Settings ──────────────────────────────────────────────────
-            item {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-                    shape  = RoundedCornerShape(12.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            stringResource(R.string.scan_settings),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = CyanAccent,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(
-                                    stringResource(R.string.beep_on_scan),
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                )
-                                Text(
-                                    stringResource(R.string.beep_on_scan_subtitle),
-                                    style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
-                                )
-                            }
-                            Switch(
-                                checked = uiState.scanSound,
-                                onCheckedChange = viewModel::toggleScanSound,
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = GreenAccent,
-                                    checkedTrackColor = GreenAccent.copy(alpha = 0.4f)
-                                )
-                            )
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-                        Spacer(Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(
-                                    stringResource(R.string.vibrate_on_scan),
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                )
-                                Text(
-                                    stringResource(R.string.vibrate_on_scan_subtitle),
-                                    style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
-                                )
-                            }
-                            Switch(
-                                checked = uiState.vibration,
-                                onCheckedChange = viewModel::toggleVibration,
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = GreenAccent,
-                                    checkedTrackColor = GreenAccent.copy(alpha = 0.4f)
-                                )
-                            )
+                SettingsCard(title = stringResource(R.string.language)) {
+                    Text(stringResource(R.string.language_description), style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
+                    Spacer(Modifier.height(12.dp))
+                    listOf(
+                        LanguageManager.AppLanguage.SYSTEM_DEFAULT to stringResource(R.string.language_system_default),
+                        LanguageManager.AppLanguage.ENGLISH to stringResource(R.string.language_english),
+                        LanguageManager.AppLanguage.ARABIC to stringResource(R.string.language_arabic)
+                    ).forEach { (lang, label) ->
+                        LanguageOptionRow(label = label, selected = currentLanguage == lang) {
+                            currentLanguage = lang
+                            LanguageManager.setLanguage(lang)
                         }
                     }
                 }
             }
 
-            // ── Data Management ────────────────────────────────────────────────
+            // ── Scan Settings ───────────────────────────────────────────────
             item {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-                    shape  = RoundedCornerShape(12.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                SettingsCard(title = stringResource(R.string.scan_settings)) {
+                    SwitchRow(
+                        title = stringResource(R.string.beep_on_scan),
+                        subtitle = stringResource(R.string.beep_on_scan_subtitle),
+                        checked = uiState.scanSound,
+                        onCheckedChange = viewModel::toggleScanSound
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+                    Spacer(Modifier.height(8.dp))
+                    SwitchRow(
+                        title = stringResource(R.string.vibrate_on_scan),
+                        subtitle = stringResource(R.string.vibrate_on_scan_subtitle),
+                        checked = uiState.vibration,
+                        onCheckedChange = viewModel::toggleVibration
+                    )
+                }
+            }
+
+            // ── Product Catalog ─────────────────────────────────────────────
+            item {
+                SettingsCard(title = stringResource(R.string.update_catalog)) {
+                    // Catalog info
+                    if (uiState.catalogCount > 0) {
                         Text(
-                            stringResource(R.string.data_management),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = CyanAccent,
-                                fontWeight = FontWeight.Bold
-                            )
+                            "${uiState.catalogCount} products  •  ${uiState.catalogLastUpdated}",
+                            style = MaterialTheme.typography.bodySmall.copy(color = GreenAccent, fontWeight = FontWeight.SemiBold)
                         )
-                        Spacer(Modifier.height(12.dp))
-                        Button(
-                            onClick = { navController.navigate(Screen.BackupRestore.route) },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = SurfaceVariant,
-                                contentColor   = CyanAccent
-                            ),
-                            shape = RoundedCornerShape(8.dp)
-                        ) { Text(stringResource(R.string.backup_restore)) }
-                        Spacer(Modifier.height(8.dp))
-                        Button(
-                            onClick = { showClearDialog = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = ErrorRed.copy(alpha = 0.15f),
-                                contentColor   = ErrorRed
-                            ),
-                            shape = RoundedCornerShape(8.dp)
-                        ) { Text(stringResource(R.string.clear_all_records)) }
+                    } else {
+                        Text(
+                            uiState.catalogLastUpdated,
+                            style = MaterialTheme.typography.bodySmall.copy(color = OrangeAccent)
+                        )
                     }
+                    Text(
+                        stringResource(R.string.update_catalog_hint),
+                        style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
+                    )
+                    Spacer(Modifier.height(12.dp))
+
+                    // WiFi pull
+                    when (uiState.wifiCatalogState) {
+                        SettingsViewModel.WifiCatalogState.IDLE,
+                        SettingsViewModel.WifiCatalogState.ERROR -> {
+                            Button(
+                                onClick = { viewModel.pullCatalogFromPc() },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = CyanAccent.copy(alpha = 0.15f), contentColor = CyanAccent),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Wifi, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(stringResource(R.string.update_catalog_wifi))
+                            }
+                            if (uiState.wifiCatalogState == SettingsViewModel.WifiCatalogState.ERROR) {
+                                Text(uiState.wifiCatalogStatus, style = MaterialTheme.typography.bodySmall.copy(color = ErrorRed), modifier = Modifier.padding(top = 4.dp))
+                            }
+                        }
+                        SettingsViewModel.WifiCatalogState.DISCOVERING -> {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = CyanAccent)
+                                Text(uiState.wifiCatalogStatus, style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
+                            }
+                        }
+                        SettingsViewModel.WifiCatalogState.DOWNLOADING -> {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = CyanAccent)
+                                    Text(uiState.wifiCatalogStatus, style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
+                                }
+                                LinearProgressIndicator(
+                                    progress = { uiState.wifiCatalogProgress },
+                                    modifier = Modifier.fillMaxWidth(), color = CyanAccent, trackColor = CyanAccent.copy(alpha = 0.15f)
+                                )
+                            }
+                        }
+                        SettingsViewModel.WifiCatalogState.SUCCESS -> {
+                            Card(colors = CardDefaults.cardColors(containerColor = GreenAccent.copy(alpha = 0.12f)), shape = RoundedCornerShape(8.dp)) {
+                                Text(uiState.wifiCatalogStatus, style = MaterialTheme.typography.bodySmall.copy(color = GreenAccent, fontWeight = FontWeight.SemiBold), modifier = Modifier.fillMaxWidth().padding(12.dp))
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            OutlinedButton(onClick = { viewModel.resetWifiCatalogState() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) {
+                                Text(stringResource(R.string.update_catalog_wifi))
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+                    Spacer(Modifier.height(8.dp))
+
+                    // File import
+                    if (uiState.catalogImporting) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = CyanAccent)
+                            Text("Importing…", style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = { fileLauncher.launch("*/*") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
+                        ) { Text("Import file (CSV or .db)") }
+                    }
+                }
+            }
+
+            // ── Data Management ─────────────────────────────────────────────
+            item {
+                SettingsCard(title = stringResource(R.string.data_management)) {
+                    Button(
+                        onClick = { navController.navigate(Screen.BackupRestore.route) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = SurfaceVariant, contentColor = CyanAccent),
+                        shape = RoundedCornerShape(8.dp)
+                    ) { Text(stringResource(R.string.backup_restore)) }
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = { showClearDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = ErrorRed.copy(alpha = 0.15f), contentColor = ErrorRed),
+                        shape = RoundedCornerShape(8.dp)
+                    ) { Text(stringResource(R.string.clear_all_records)) }
                 }
             }
         }
@@ -231,40 +226,38 @@ fun SettingsScreen(
             onDismissRequest = { showClearDialog = false },
             title = { Text(stringResource(R.string.clear_all_records)) },
             text = { Text(stringResource(R.string.clear_all_records_confirm)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.clearAllRecords()
-                    showClearDialog = false
-                }) { Text(stringResource(R.string.clear)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showClearDialog = false }) { Text(stringResource(R.string.cancel)) }
-            }
+            confirmButton = { TextButton(onClick = { viewModel.clearAllRecords(); showClearDialog = false }) { Text(stringResource(R.string.clear)) } },
+            dismissButton = { TextButton(onClick = { showClearDialog = false }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 }
 
 @Composable
+private fun SettingsCard(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Card(colors = CardDefaults.cardColors(containerColor = SurfaceDark), shape = RoundedCornerShape(12.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium.copy(color = CyanAccent, fontWeight = FontWeight.Bold))
+            Spacer(Modifier.height(12.dp))
+            content()
+        }
+    }
+}
+
+@Composable
+private fun SwitchRow(title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface))
+            Text(subtitle, style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange, colors = SwitchDefaults.colors(checkedThumbColor = GreenAccent, checkedTrackColor = GreenAccent.copy(alpha = 0.4f)))
+    }
+}
+
+@Composable
 private fun LanguageOptionRow(label: String, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        RadioButton(
-            selected = selected,
-            onClick = onClick,
-            colors = RadioButtonDefaults.colors(
-                selectedColor = CyanAccent,
-                unselectedColor = SubtleGray
-            )
-        )
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        )
+    Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
+        RadioButton(selected = selected, onClick = onClick, colors = RadioButtonDefaults.colors(selectedColor = CyanAccent, unselectedColor = SubtleGray))
+        Text(label, style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface))
     }
 }

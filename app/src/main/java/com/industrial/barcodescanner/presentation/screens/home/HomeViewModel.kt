@@ -2,29 +2,36 @@ package com.industrial.barcodescanner.presentation.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.industrial.barcodescanner.data.local.catalog.ProductCatalogOpenHelper
 import com.industrial.barcodescanner.domain.model.ScannedItem
 import com.industrial.barcodescanner.domain.repository.ScannedItemRepository
+import com.industrial.barcodescanner.domain.repository.WifiPrintHistoryRepository
 import com.industrial.barcodescanner.presentation.screens.scan.TAG_TYPES
 import com.industrial.barcodescanner.presentation.screens.scan.UNIT_TYPES
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val repository: ScannedItemRepository
+    private val repository: ScannedItemRepository,
+    private val wifiHistoryRepository: WifiPrintHistoryRepository,
+    private val catalogOpenHelper: ProductCatalogOpenHelper
 ) : ViewModel() {
 
     data class HomeUiState(
         val totalRecords: Int = 0,
-        val uniqueBarcodes: Int = 0,
         val totalCopies: Int = 0,
-        /** Counts for A4 / 4PCS / 4PCS_DATE / 4PCS_SAME / VEG, in [TAG_TYPES] order. */
         val tagTypeCounts: Map<String, Int> = TAG_TYPES.associateWith { 0 },
-        /** Counts for PCS / PKT / CTN / KGS, in [UNIT_TYPES] order. */
         val unitTypeCounts: Map<String, Int> = UNIT_TYPES.associateWith { 0 },
         val recentItems: List<ScannedItem> = emptyList(),
+        /** True when the product catalog has no entries (user needs to load it). */
+        val catalogEmpty: Boolean = false,
+        /** Physical pages printed via WiFi today. */
+        val wifiPagesToday: Int = 0,
         val error: String? = null
     )
 
@@ -33,39 +40,22 @@ class HomeViewModel @Inject constructor(
 
     init {
         observeItems()
+        observeWifiStats()
+        checkCatalog()
     }
 
-    /**
-     * Continuously collects the items Flow from Room so the dashboard
-     * recomputes automatically whenever a record is inserted, updated,
-     * or deleted — no manual refresh or app restart required.
-     */
     private fun observeItems() {
         viewModelScope.launch {
             repository.getAllItems()
                 .catch { e -> _uiState.update { it.copy(error = e.message) } }
                 .collect { allItems ->
-                    val totalRecords = allItems.size
-                    val uniqueBarcodes = allItems.map { it.barcode }.distinct().size
-                    val totalCopies = allItems.sumOf { it.copies }
-
-                    val tagTypeCounts = TAG_TYPES.associateWith { tagType ->
-                        allItems.count { it.tagType == tagType }
-                    }
-                    val unitTypeCounts = UNIT_TYPES.associateWith { unitType ->
-                        allItems.count { it.unitType == unitType }
-                    }
-
-                    val recentItems = allItems.sortedByDescending { it.createdAt }.take(5)
-
                     _uiState.update {
                         it.copy(
-                            totalRecords = totalRecords,
-                            uniqueBarcodes = uniqueBarcodes,
-                            totalCopies = totalCopies,
-                            tagTypeCounts = tagTypeCounts,
-                            unitTypeCounts = unitTypeCounts,
-                            recentItems = recentItems,
+                            totalRecords = allItems.size,
+                            totalCopies = allItems.sumOf { i -> i.copies },
+                            tagTypeCounts = TAG_TYPES.associateWith { t -> allItems.count { i -> i.tagType == t } },
+                            unitTypeCounts = UNIT_TYPES.associateWith { u -> allItems.count { i -> i.unitType == u } },
+                            recentItems = allItems.sortedByDescending { i -> i.createdAt }.take(5),
                             error = null
                         )
                     }
@@ -73,7 +63,25 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun clearError() {
-        _uiState.update { it.copy(error = null) }
+    private fun observeWifiStats() {
+        val startOfToday = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        viewModelScope.launch {
+            wifiHistoryRepository.getAll()
+                .map { rows -> rows.count { it.kind == "sheet" && it.timestamp >= startOfToday } }
+                .collect { count -> _uiState.update { it.copy(wifiPagesToday = count) } }
+        }
     }
+
+    private fun checkCatalog() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val empty = catalogOpenHelper.productCount() == 0
+            _uiState.update { it.copy(catalogEmpty = empty) }
+        }
+    }
+
+    fun clearError() = _uiState.update { it.copy(error = null) }
 }

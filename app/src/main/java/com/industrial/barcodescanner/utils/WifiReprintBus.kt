@@ -14,8 +14,14 @@ class WifiReprintBus @Inject constructor() {
     @Volatile
     private var pendingCsv: String? = null
 
-    fun request(csv: String) {
+    /**
+     * Stashes a CSV for the Export screen to pick up and send via WiFi.
+     * Returns false if a reprint is already queued (prevents overwrite).
+     */
+    fun request(csv: String): Boolean {
+        if (pendingCsv != null) return false
         pendingCsv = csv
+        return true
     }
 
     /** Returns the pending CSV (if any) and clears it. */

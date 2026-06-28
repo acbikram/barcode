@@ -80,6 +80,7 @@ fun ScanScreen(
     var isCameraBound by remember { mutableStateOf(false) }
 
     val uiState by viewModel.uiState.collectAsState()
+    val recentScans by viewModel.recentScans.collectAsState()
     val scannerInactive = uiState.scannerInactive
 
     val cameraPermissionDeniedMsg = stringResource(R.string.camera_permission_required)
@@ -289,14 +290,14 @@ fun ScanScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp)
             ) {
-                items(uiState.recentScans, key = { it.id }) { item ->
+                items(recentScans, key = { it.id }) { item ->
                     RecentScanCard(
                         item = item,
                         onEdit = { viewModel.requestEdit(item) },
                         onDelete = { viewModel.requestDelete(item) }
                     )
                 }
-                if (uiState.recentScans.isEmpty()) {
+                if (recentScans.isEmpty()) {
                     item {
                         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             Text(

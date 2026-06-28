@@ -577,29 +577,29 @@ fun ExportScreen(
         val confirmChoice: String
         val dismissLabel: String
         val dismissChoice: String
-        when (req.kind) {
-            "print_or_cancel" -> {
+        when (val kind = req.kind) {
+            is WifiDecisionKind.PrintOrCancel -> {
                 title = stringResource(R.string.wifi_some_failed_title)
-                confirmLabel = stringResource(R.string.wifi_print_ready_format, req.readyCount)
+                confirmLabel = stringResource(R.string.wifi_print_ready_format, kind.readyCount)
                 confirmChoice = "print"
                 dismissLabel = stringResource(R.string.cancel)
                 dismissChoice = "cancel"
             }
-            "retry_left" -> {
-                title = stringResource(R.string.wifi_printed_title_format, req.printedCount)
+            is WifiDecisionKind.RetryLeft -> {
+                title = stringResource(R.string.wifi_printed_title_format, kind.printedCount)
                 confirmLabel = stringResource(R.string.wifi_retry_yes)
                 confirmChoice = "retry"
                 dismissLabel = stringResource(R.string.wifi_retry_no)
                 dismissChoice = "no"
             }
-            "reprint_sheets" -> {
-                title = stringResource(R.string.wifi_reprint_title_format, req.failedSheets)
+            is WifiDecisionKind.ReprintSheets -> {
+                title = stringResource(R.string.wifi_reprint_title_format, kind.failedSheets)
                 confirmLabel = stringResource(R.string.wifi_reprint_yes)
                 confirmChoice = "reprint"
                 dismissLabel = stringResource(R.string.wifi_reprint_skip)
                 dismissChoice = "skip"
             }
-            else -> { // retry_or_cancel
+            WifiDecisionKind.RetryOrCancel -> {
                 title = stringResource(R.string.wifi_none_printable_title)
                 confirmLabel = stringResource(R.string.wifi_retry)
                 confirmChoice = "retry"
@@ -618,30 +618,25 @@ fun ExportScreen(
                         .heightIn(max = 320.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    if (req.kind == "retry_left") {
-                        Text(stringResource(R.string.wifi_retry_prompt, req.failed.size))
-                    } else if (req.kind == "reprint_sheets") {
-                        Text(stringResource(R.string.wifi_reprint_prompt, req.failedSheets, req.printedCount))
-                    } else if (req.readyCount > 0) {
-                        Text(stringResource(R.string.wifi_ready_count, req.readyCount))
+                    when (val kind = req.kind) {
+                        is WifiDecisionKind.RetryLeft ->
+                            Text(stringResource(R.string.wifi_retry_prompt, req.failed.size))
+                        is WifiDecisionKind.ReprintSheets ->
+                            Text(stringResource(R.string.wifi_reprint_prompt, kind.failedSheets, kind.printedCount))
+                        is WifiDecisionKind.PrintOrCancel ->
+                            if (kind.readyCount > 0) Text(stringResource(R.string.wifi_ready_count, kind.readyCount))
+                        WifiDecisionKind.RetryOrCancel -> {}
                     }
-                    if (failedText.isNotBlank() && req.kind != "reprint_sheets") {
-                        Text(
-                            failedText,
-                            style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
-                        )
+                    if (failedText.isNotBlank() && req.kind !is WifiDecisionKind.ReprintSheets) {
+                        Text(failedText, style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
                     }
                 }
             },
             confirmButton = {
-                TextButton(onClick = { viewModel.submitWifiDecision(confirmChoice) }) {
-                    Text(confirmLabel)
-                }
+                TextButton(onClick = { viewModel.submitWifiDecision(confirmChoice) }) { Text(confirmLabel) }
             },
             dismissButton = {
-                TextButton(onClick = { viewModel.submitWifiDecision(dismissChoice) }) {
-                    Text(dismissLabel)
-                }
+                TextButton(onClick = { viewModel.submitWifiDecision(dismissChoice) }) { Text(dismissLabel) }
             }
         )
     }

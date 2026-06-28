@@ -82,8 +82,6 @@ abstract class BarcodeDatabase : RoomDatabase() {
                     "barcode_to_csv_database"
                 )
                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
-                    // Safety net only — real migrations are added above.
-                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

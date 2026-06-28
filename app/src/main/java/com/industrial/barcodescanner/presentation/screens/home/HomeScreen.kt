@@ -92,6 +92,31 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // ── Empty catalog warning ─────────────────────────────────────────
+            if (uiState.catalogEmpty) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = OrangeAccent.copy(alpha = 0.12f)),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text("⚠", style = MaterialTheme.typography.bodyLarge.copy(color = OrangeAccent))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("No product catalog", style = MaterialTheme.typography.bodyMedium.copy(color = OrangeAccent, fontWeight = FontWeight.Bold))
+                            Text("Barcodes won't resolve — load a catalog in Settings.", style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
+                        }
+                        TextButton(onClick = { navController.navigate(Screen.Settings.route) }) {
+                            Text(stringResource(R.string.settings), color = OrangeAccent)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             // ── Dashboard card ──────────────────────────────────────────────
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -118,18 +143,23 @@ fun HomeScreen(
                         ClickableStatCard(
                             label = stringResource(R.string.total_records),
                             value = uiState.totalRecords,
-                            onClick = {
-                                navController.navigate("${Screen.History.BASE}?filter=$FILTER_ALL&sort=NEWEST")
-                            }
+                            onClick = { navController.navigate("${Screen.History.BASE}?filter=$FILTER_ALL&sort=NEWEST") }
                         )
                         ClickableStatCard(
                             label = stringResource(R.string.total_copies),
                             value = uiState.totalCopies,
                             accentColor = OrangeAccent,
-                            onClick = {
-                                navController.navigate("${Screen.History.BASE}?filter=$FILTER_ALL&sort=COPIES")
-                            }
+                            onClick = { navController.navigate("${Screen.History.BASE}?filter=$FILTER_ALL&sort=COPIES") }
                         )
+                        if (uiState.wifiPagesToday > 0) {
+                            ClickableStatCard(
+                                label = "WiFi Today",
+                                value = uiState.wifiPagesToday,
+                                accentColor = GreenAccent,
+                                width = 90.dp,
+                                onClick = { navController.navigate(Screen.Export.route) }
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))

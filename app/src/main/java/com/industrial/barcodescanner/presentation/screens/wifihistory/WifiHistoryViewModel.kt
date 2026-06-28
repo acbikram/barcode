@@ -2,8 +2,8 @@ package com.industrial.barcodescanner.presentation.screens.wifihistory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.industrial.barcodescanner.data.local.database.BarcodeDatabase
 import com.industrial.barcodescanner.data.local.entity.WifiPrintHistoryEntity
+import com.industrial.barcodescanner.domain.repository.WifiPrintHistoryRepository
 import com.industrial.barcodescanner.utils.WifiReprintBus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,11 +36,10 @@ data class HistoryTotals(val pagesToday: Int, val failedToday: Int, val pagesAll
 
 @HiltViewModel
 class WifiHistoryViewModel @Inject constructor(
-    database: BarcodeDatabase,
+    private val historyRepository: WifiPrintHistoryRepository,
     private val reprintBus: WifiReprintBus
 ) : ViewModel() {
 
-    private val dao = database.wifiPrintHistoryDao()
     private val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 
     private val _search = MutableStateFlow("")
@@ -51,7 +50,7 @@ class WifiHistoryViewModel @Inject constructor(
 
     /** History grouped by job (newest first), with search + date filters applied. */
     val groups: StateFlow<List<WifiJobGroup>> =
-        combine(dao.getAll(), _search, _range) { all, q, range ->
+        combine(historyRepository.getAll(), _search, _range) { all, q, range ->
             val cutoff = cutoffFor(range)
             val ql = q.trim().lowercase(Locale.getDefault())
             val filtered = all.filter { e ->
@@ -76,7 +75,7 @@ class WifiHistoryViewModel @Inject constructor(
 
     /** Today's printed-page and failed counts (plus all-time pages). */
     val totals: StateFlow<HistoryTotals> =
-        dao.getAll().map { all ->
+        historyRepository.getAll().map { all ->
             val t0 = startOfToday()
             val today = all.filter { it.timestamp >= t0 }
             HistoryTotals(
@@ -110,6 +109,7 @@ class WifiHistoryViewModel @Inject constructor(
 
     private fun stash(entities: List<WifiPrintHistoryEntity>) {
         if (entities.isEmpty()) return
+        // If a reprint is already queued, show a warning via the bus result
         reprintBus.request(buildCsv(entities))
     }
 
@@ -130,6 +130,6 @@ class WifiHistoryViewModel @Inject constructor(
         return (listOf(header) + rows).joinToString("\n") + "\n"
     }
 
-    fun deleteJob(jobId: Long) { viewModelScope.launch { dao.deleteJob(jobId) } }
-    fun clearAll() { viewModelScope.launch { dao.deleteAll() } }
+    fun deleteJob(jobId: Long) { viewModelScope.launch { historyRepository.deleteJob(jobId) } }
+    fun clearAll() { viewModelScope.launch { historyRepository.deleteAll() } }
 }
