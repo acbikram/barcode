@@ -207,7 +207,8 @@ fun SettingsScreen(
                 val currentVersion = remember {
                     try {
                         val info = context.packageManager.getPackageInfo(context.packageName, 0)
-                        "v${info.versionName} (${info.versionCode})"
+                        val code = androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(info).toInt()
+                        "v${info.versionName} ($code)"
                     } catch (_: Exception) { "Unknown" }
                 }
 

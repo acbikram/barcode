@@ -173,6 +173,8 @@ class SettingsViewModel @Inject constructor(
         val info = context.packageManager.getPackageInfo(context.packageName, 0)
         return androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(info).toInt()
     }
+
+    fun resetWifiCatalogState() {
         _uiState.update {
             it.copy(wifiCatalogState = WifiCatalogState.IDLE, wifiCatalogProgress = 0f, wifiCatalogStatus = "")
         }
@@ -183,8 +185,7 @@ class SettingsViewModel @Inject constructor(
     fun checkForUpdate() {
         viewModelScope.launch {
             _uiState.update { it.copy(updateState = UpdateState.CHECKING, updateError = "") }
-            val currentCode = context.packageManager
-                .getPackageInfo(context.packageName, 0).let { androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it).toInt() }
+            val currentCode = currentVersionCode()
             when (val result = UpdateChecker.check(currentCode)) {
                 is UpdateChecker.CheckResult.UpdateAvailable -> {
                     val info = result.info
