@@ -26,7 +26,8 @@ import javax.inject.Inject
 @HiltViewModel
 class BackupRestoreViewModel @Inject constructor(
     private val repository: ScannedItemRepository,
-    private val catalogHelper: ProductCatalogOpenHelper
+    private val catalogHelper: ProductCatalogOpenHelper,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) : ViewModel() {
 
     data class BackupUiState(

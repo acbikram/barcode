@@ -39,7 +39,8 @@ class ExportViewModel @Inject constructor(
     private val repository: ScannedItemRepository,
     private val historyRepository: WifiPrintHistoryRepository,
     private val preferencesManager: PreferencesManager,
-    private val reprintBus: WifiReprintBus
+    private val reprintBus: WifiReprintBus,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) : ViewModel() {
 
     data class ExportUiState(
