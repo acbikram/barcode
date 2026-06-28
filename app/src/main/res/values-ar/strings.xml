@@ -208,4 +208,14 @@
     <string name="wifi_review_unit">الوحدة</string>
     <string name="wifi_review_copies">نسخ</string>
     <string name="wifi_review_more">+ %1$d المزيد…</string>
+
+    <!-- تحديث التطبيق -->
+    <string name="update_app_title">تحديثات التطبيق</string>
+    <string name="update_current_version_format">الإصدار الحالي: %1$s</string>
+    <string name="update_check_button">التحقق من التحديثات</string>
+    <string name="update_checking">جاري التحقق…</string>
+    <string name="update_up_to_date">✓ لديك أحدث إصدار</string>
+    <string name="update_available_format">تحديث متاح: v%1$s</string>
+    <string name="update_now_button">تحديث الآن</string>
+    <string name="update_downloading_format">جاري التنزيل… %1$d%%</string>
 </resources>

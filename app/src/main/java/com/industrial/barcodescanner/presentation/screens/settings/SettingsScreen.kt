@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -39,6 +40,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     var showClearDialog by remember { mutableStateOf(false) }
     var currentLanguage by remember { mutableStateOf(LanguageManager.getCurrentLanguage()) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -196,6 +198,109 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp)
                         ) { Text("Import file (CSV or .db)") }
+                    }
+                }
+            }
+
+            // ── App Updates ─────────────────────────────────────────────────
+            item {
+                val currentVersion = remember {
+                    try {
+                        val info = context.packageManager.getPackageInfo(context.packageName, 0)
+                        "v${info.versionName} (${info.versionCode})"
+                    } catch (_: Exception) { "Unknown" }
+                }
+
+                SettingsCard(title = stringResource(R.string.update_app_title)) {
+                    Text(
+                        stringResource(R.string.update_current_version_format, currentVersion),
+                        style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
+                    )
+                    Spacer(Modifier.height(12.dp))
+
+                    when (uiState.updateState) {
+                        SettingsViewModel.UpdateState.IDLE -> {
+                            Button(
+                                onClick = { viewModel.checkForUpdate() },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp)
+                            ) { Text(stringResource(R.string.update_check_button)) }
+                        }
+
+                        SettingsViewModel.UpdateState.CHECKING -> {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = CyanAccent)
+                                Text(stringResource(R.string.update_checking), style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
+                            }
+                        }
+
+                        SettingsViewModel.UpdateState.UP_TO_DATE -> {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = GreenAccent.copy(alpha = 0.12f)),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    stringResource(R.string.update_up_to_date),
+                                    style = MaterialTheme.typography.bodySmall.copy(color = GreenAccent, fontWeight = FontWeight.SemiBold),
+                                    modifier = Modifier.fillMaxWidth().padding(12.dp)
+                                )
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            OutlinedButton(onClick = { viewModel.resetUpdateState() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) {
+                                Text(stringResource(R.string.update_check_button))
+                            }
+                        }
+
+                        SettingsViewModel.UpdateState.AVAILABLE -> {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = CyanAccent.copy(alpha = 0.12f)),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    stringResource(R.string.update_available_format, uiState.updateVersionName),
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = CyanAccent, fontWeight = FontWeight.Bold),
+                                    modifier = Modifier.fillMaxWidth().padding(12.dp)
+                                )
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Button(
+                                onClick = { viewModel.downloadAndInstallUpdate() },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = CyanAccent),
+                                shape = RoundedCornerShape(8.dp)
+                            ) { Text(stringResource(R.string.update_now_button), color = androidx.compose.ui.graphics.Color.Black, fontWeight = FontWeight.Bold) }
+                        }
+
+                        SettingsViewModel.UpdateState.DOWNLOADING -> {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = CyanAccent)
+                                    Text(
+                                        stringResource(R.string.update_downloading_format, uiState.updateDownloadProgress),
+                                        style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
+                                    )
+                                }
+                                LinearProgressIndicator(
+                                    progress = { uiState.updateDownloadProgress / 100f },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = CyanAccent,
+                                    trackColor = CyanAccent.copy(alpha = 0.15f)
+                                )
+                            }
+                        }
+
+                        SettingsViewModel.UpdateState.ERROR -> {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = ErrorRed.copy(alpha = 0.12f)),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(uiState.updateError, style = MaterialTheme.typography.bodySmall.copy(color = ErrorRed), modifier = Modifier.fillMaxWidth().padding(12.dp))
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            Button(onClick = { viewModel.checkForUpdate() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) {
+                                Text(stringResource(R.string.update_check_button))
+                            }
+                        }
                     }
                 }
             }

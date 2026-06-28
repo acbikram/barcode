@@ -3,7 +3,7 @@ name: Android CI
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:        # lets you run a build manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
@@ -35,8 +35,28 @@ jobs:
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: gradle assembleRelease
 
-    - name: Upload APK
+    - name: Read version info
+      id: version
+      run: |
+        CODE=$(grep "versionCode" app/build.gradle.kts | grep -o '[0-9]*')
+        NAME=$(grep "versionName" app/build.gradle.kts | grep -o '"[^"]*"' | tr -d '"')
+        echo "code=$CODE" >> $GITHUB_OUTPUT
+        echo "name=$NAME" >> $GITHUB_OUTPUT
+        echo "tag=v${NAME}+${CODE}" >> $GITHUB_OUTPUT
+
+    - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-release-apk
         path: app/build/outputs/apk/release/app-release.apk
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.version.outputs.tag }}
+        name: "Barcode To CSV ${{ steps.version.outputs.tag }}"
+        body: "Auto-release from commit ${{ github.sha }}"
+        files: app/build/outputs/apk/release/app-release.apk
+        make_latest: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

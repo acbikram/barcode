@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.industrial.barcodescanner.data.local.catalog.ProductCatalogOpenHelper
 import com.industrial.barcodescanner.domain.repository.ScannedItemRepository
 import com.industrial.barcodescanner.utils.PreferencesManager
+import com.industrial.barcodescanner.utils.ApkInstaller
+import com.industrial.barcodescanner.utils.UpdateChecker
 import com.industrial.barcodescanner.utils.WifiDiscovery
 import com.industrial.barcodescanner.utils.WifiSender
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,13 +41,19 @@ class SettingsViewModel @Inject constructor(
         val catalogCount: Int = 0,
         val catalogLastUpdated: String = "",
         val catalogImporting: Boolean = false,
-        val catalogImportResult: String? = null,   // null = idle, "" = error, "N products" = success
+        val catalogImportResult: String? = null,
         val wifiCatalogState: WifiCatalogState = WifiCatalogState.IDLE,
         val wifiCatalogProgress: Float = 0f,
-        val wifiCatalogStatus: String = ""
+        val wifiCatalogStatus: String = "",
+        // App update
+        val updateState: UpdateState = UpdateState.IDLE,
+        val updateVersionName: String = "",
+        val updateDownloadProgress: Int = 0,
+        val updateError: String = ""
     )
 
     enum class WifiCatalogState { IDLE, DISCOVERING, DOWNLOADING, SUCCESS, ERROR }
+    enum class UpdateState { IDLE, CHECKING, UP_TO_DATE, AVAILABLE, DOWNLOADING, ERROR }
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -164,5 +172,67 @@ class SettingsViewModel @Inject constructor(
         _uiState.update {
             it.copy(wifiCatalogState = WifiCatalogState.IDLE, wifiCatalogProgress = 0f, wifiCatalogStatus = "")
         }
+    }
+
+    // ── App update ────────────────────────────────────────────────────────────
+
+    fun checkForUpdate() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(updateState = UpdateState.CHECKING, updateError = "") }
+            val currentCode = context.packageManager
+                .getPackageInfo(context.packageName, 0).versionCode
+            when (val result = UpdateChecker.check(currentCode)) {
+                is UpdateChecker.CheckResult.UpdateAvailable -> {
+                    val info = result.info
+                    _uiState.update {
+                        it.copy(
+                            updateState = UpdateState.AVAILABLE,
+                            updateVersionName = info.latestVersionName
+                        )
+                    }
+                    // Also fire a notification so user sees it even if they leave Settings
+                    ApkInstaller.postUpdateNotification(
+                        context, info.latestVersionName, info.apkDownloadUrl
+                    )
+                }
+                UpdateChecker.CheckResult.UpToDate ->
+                    _uiState.update { it.copy(updateState = UpdateState.UP_TO_DATE) }
+                is UpdateChecker.CheckResult.Error ->
+                    _uiState.update { it.copy(updateState = UpdateState.ERROR, updateError = result.message) }
+            }
+        }
+    }
+
+    fun downloadAndInstallUpdate() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(updateState = UpdateState.DOWNLOADING, updateDownloadProgress = 0) }
+            val currentCode = context.packageManager
+                .getPackageInfo(context.packageName, 0).versionCode
+            try {
+                // Re-fetch latest to get the URL (avoids storing it in state)
+                val result = UpdateChecker.check(currentCode)
+                if (result is UpdateChecker.CheckResult.UpdateAvailable) {
+                    ApkInstaller.downloadAndInstall(
+                        context  = context,
+                        url      = result.info.apkDownloadUrl,
+                        versionName = result.info.latestVersionName,
+                        onProgress = { pct ->
+                            _uiState.update { it.copy(updateDownloadProgress = pct) }
+                        }
+                    )
+                    // State stays DOWNLOADING until user installs & app restarts
+                } else {
+                    _uiState.update { it.copy(updateState = UpdateState.UP_TO_DATE) }
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(updateState = UpdateState.ERROR, updateError = e.message ?: "Download failed")
+                }
+            }
+        }
+    }
+
+    fun resetUpdateState() {
+        _uiState.update { it.copy(updateState = UpdateState.IDLE, updateError = "", updateDownloadProgress = 0) }
     }
 }

@@ -208,4 +208,14 @@
     <string name="wifi_review_unit">Unit</string>
     <string name="wifi_review_copies">Copies</string>
     <string name="wifi_review_more">+ %1$d more…</string>
+
+    <!-- App update -->
+    <string name="update_app_title">App Updates</string>
+    <string name="update_current_version_format">Current version: %1$s</string>
+    <string name="update_check_button">Check for Updates</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_up_to_date">✓ You have the latest version</string>
+    <string name="update_available_format">Update available: v%1$s</string>
+    <string name="update_now_button">Update Now</string>
+    <string name="update_downloading_format">Downloading… %1$d%%</string>
 </resources>
