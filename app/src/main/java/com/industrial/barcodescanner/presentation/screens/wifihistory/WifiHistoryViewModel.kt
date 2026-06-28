@@ -10,13 +10,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import org.json.JSONArray
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
 
@@ -40,7 +43,8 @@ class WifiHistoryViewModel @Inject constructor(
     private val reprintBus: WifiReprintBus
 ) : ViewModel() {
 
-    private val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+    // Thread-safe formatter (unlike SimpleDateFormat)
+    private val dateFmt: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     private val _search = MutableStateFlow("")
     val search: StateFlow<String> = _search
@@ -57,9 +61,10 @@ class WifiHistoryViewModel @Inject constructor(
                 e.timestamp >= cutoff && (ql.isEmpty() ||
                     e.posCode.lowercase(Locale.getDefault()).contains(ql) ||
                     e.summary.lowercase(Locale.getDefault()).contains(ql) ||
-                    e.itemsJson.lowercase(Locale.getDefault()).contains(ql) ||
                     e.tagType.lowercase(Locale.getDefault()).contains(ql) ||
-                    dateFmt.format(Date(e.timestamp)).contains(ql))
+                    dateFmt.format(
+                        LocalDateTime.ofInstant(Instant.ofEpochMilli(e.timestamp), ZoneId.systemDefault())
+                    ).contains(ql))
             }
             filtered.groupBy { it.jobId }
                 .map { (jid, rows) ->
@@ -71,34 +76,39 @@ class WifiHistoryViewModel @Inject constructor(
                     )
                 }
                 .sortedByDescending { it.timestamp }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        }
+        .flowOn(Dispatchers.Default) // heavy filter/group off the main thread
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    /** Today's printed-page and failed counts (plus all-time pages). */
+    /** Today's printed-page and failed counts. */
     val totals: StateFlow<HistoryTotals> =
-        historyRepository.getAll().map { all ->
-            val t0 = startOfToday()
-            val today = all.filter { it.timestamp >= t0 }
-            HistoryTotals(
-                pagesToday = today.count { it.kind == "sheet" },
-                failedToday = today.count { it.kind == "failed" },
-                pagesAll = all.count { it.kind == "sheet" }
-            )
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HistoryTotals(0, 0, 0))
+        historyRepository.getAll()
+            .map { all ->
+                val t0 = startOfToday()
+                val today = all.filter { it.timestamp >= t0 }
+                HistoryTotals(
+                    pagesToday  = today.count { it.kind == "sheet" },
+                    failedToday = today.count { it.kind == "failed" },
+                    pagesAll    = all.count   { it.kind == "sheet" }
+                )
+            }
+            .flowOn(Dispatchers.Default)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HistoryTotals(0, 0, 0))
 
     fun setSearch(q: String) { _search.value = q }
     fun setRange(r: DateRange) { _range.value = r }
 
     private fun startOfToday(): Long {
-        val c = Calendar.getInstance()
-        c.set(Calendar.HOUR_OF_DAY, 0); c.set(Calendar.MINUTE, 0)
-        c.set(Calendar.SECOND, 0); c.set(Calendar.MILLISECOND, 0)
-        return c.timeInMillis
+        return LocalDateTime.now()
+            .withHour(0).withMinute(0).withSecond(0).withNano(0)
+            .atZone(ZoneId.systemDefault())
+            .toInstant().toEpochMilli()
     }
 
     private fun cutoffFor(range: DateRange): Long = when (range) {
-        DateRange.ALL -> 0L
+        DateRange.ALL   -> 0L
         DateRange.TODAY -> startOfToday()
-        DateRange.WEEK -> System.currentTimeMillis() - 7L * 24 * 60 * 60 * 1000
+        DateRange.WEEK  -> System.currentTimeMillis() - 7L * 24 * 60 * 60 * 1000
         DateRange.MONTH -> System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000
     }
 
@@ -116,16 +126,33 @@ class WifiHistoryViewModel @Inject constructor(
     private fun buildCsv(entities: List<WifiPrintHistoryEntity>): String {
         val header = "pos_code,price,tag_type,unit_type,copies,custom_eng,custom_ara"
         val rows = ArrayList<String>()
+        var skipped = 0
         for (e in entities) {
-            val arr = try { JSONArray(e.itemsJson) } catch (_: Exception) { JSONArray() }
+            val arr = try {
+                JSONArray(e.itemsJson)
+            } catch (_: Exception) {
+                // itemsJson is corrupted — fall back to the entity's own top-level fields
+                skipped++
+                val pos = e.posCode.ifBlank { continue }
+                rows.add("$pos,,${e.tagType},${e.unitType},${e.copies},,")
+                continue
+            }
+            if (arr.length() == 0) {
+                // No items array stored — use entity fields directly
+                val pos = e.posCode.ifBlank { continue }
+                rows.add("$pos,,${e.tagType},${e.unitType},${e.copies},,")
+                continue
+            }
             for (i in 0 until arr.length()) {
                 val o = arr.optJSONObject(i) ?: continue
-                val pos = o.optString("pos", "")
-                if (pos.isBlank()) continue
+                val pos = o.optString("pos", "").ifBlank { skipped++; continue }
                 val unit = o.optString("unit", e.unitType)
                 val copies = o.optInt("copies", 1)
                 rows.add("$pos,,${e.tagType},$unit,$copies,,")
             }
+        }
+        if (skipped > 0) {
+            android.util.Log.w("WifiReprintBus", "buildCsv: $skipped row(s) skipped due to missing data")
         }
         return (listOf(header) + rows).joinToString("\n") + "\n"
     }

@@ -18,6 +18,7 @@ import com.industrial.barcodescanner.utils.PreferencesManager
 import com.industrial.barcodescanner.utils.SoundManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
@@ -82,6 +83,7 @@ class ScanViewModel @Inject constructor(
     /** Top-20 most recently scanned items, updated automatically by Room. */
     val recentScans: StateFlow<List<ScannedItem>> = repository.getAllItems()
         .map { items -> items.sortedByDescending { it.createdAt }.take(20) }
+        .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private var scanTimeoutJob: Job = Job().also { it.cancel() }

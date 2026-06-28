@@ -29,17 +29,19 @@ class ProductCatalogOpenHelper @Inject constructor(
 
     private val dbFile: File by lazy { context.getDatabasePath(DB_NAME) }
 
-    /** Read-only handle to the product catalog. Safe to call from a background thread. */
-    fun openReadable(): SQLiteDatabase = readableDatabase
+    /**
+     * Returns a readable handle to the catalog.
+     * Synchronized on [this] so callers block while a catalog import is
+     * swapping the underlying file inside [replaceWithSqlite].
+     */
+    fun openReadable(): SQLiteDatabase = synchronized(this) { readableDatabase }
 
     /** Number of products currently loaded (0 means the catalog is empty). */
     fun productCount(): Int = try {
-        readableDatabase.rawQuery("SELECT COUNT(*) FROM products", null).use {
+        openReadable().rawQuery("SELECT COUNT(*) FROM products", null).use {
             if (it.moveToFirst()) it.getInt(0) else 0
         }
-    } catch (e: Exception) {
-        0
-    }
+    } catch (_: Exception) { 0 }
 
     /**
      * Replace the catalog contents from a provided stream. Accepts either:

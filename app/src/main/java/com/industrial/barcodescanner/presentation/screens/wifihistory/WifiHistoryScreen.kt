@@ -34,12 +34,15 @@ import com.industrial.barcodescanner.presentation.theme.GreenAccent
 import com.industrial.barcodescanner.presentation.theme.SubtleGray
 import com.industrial.barcodescanner.presentation.theme.SurfaceDark
 import org.json.JSONArray
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
-private val DT_FMT = SimpleDateFormat("yyyy-MM-dd  HH:mm:ss", Locale.US)
-private fun fmt(ts: Long): String = DT_FMT.format(Date(ts))
+private val DT_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd  HH:mm:ss")
+private fun fmt(ts: Long): String = DT_FMT.format(
+    LocalDateTime.ofInstant(Instant.ofEpochMilli(ts), ZoneId.systemDefault())
+)
 
 private data class SheetItem(val pos: String, val eng: String, val unit: String, val copies: Int, val price: String)
 

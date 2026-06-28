@@ -12,7 +12,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.Calendar
+import java.time.LocalDateTime
+import java.time.ZoneId
 import javax.inject.Inject
 
 @HiltViewModel
@@ -47,15 +48,16 @@ class HomeViewModel @Inject constructor(
     private fun observeItems() {
         viewModelScope.launch {
             repository.getAllItems()
+                .flowOn(Dispatchers.Default)
                 .catch { e -> _uiState.update { it.copy(error = e.message) } }
                 .collect { allItems ->
                     _uiState.update {
                         it.copy(
-                            totalRecords = allItems.size,
-                            totalCopies = allItems.sumOf { i -> i.copies },
-                            tagTypeCounts = TAG_TYPES.associateWith { t -> allItems.count { i -> i.tagType == t } },
+                            totalRecords  = allItems.size,
+                            totalCopies   = allItems.sumOf { i -> i.copies },
+                            tagTypeCounts = TAG_TYPES.associateWith  { t -> allItems.count { i -> i.tagType  == t } },
                             unitTypeCounts = UNIT_TYPES.associateWith { u -> allItems.count { i -> i.unitType == u } },
-                            recentItems = allItems.sortedByDescending { i -> i.createdAt }.take(5),
+                            recentItems   = allItems.sortedByDescending { i -> i.createdAt }.take(5),
                             error = null
                         )
                     }
@@ -64,10 +66,10 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun observeWifiStats() {
-        val startOfToday = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
+        val startOfToday = LocalDateTime.now()
+            .withHour(0).withMinute(0).withSecond(0).withNano(0)
+            .atZone(ZoneId.systemDefault())
+            .toInstant().toEpochMilli()
 
         viewModelScope.launch {
             wifiHistoryRepository.getAll()

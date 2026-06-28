@@ -2,6 +2,7 @@ package com.industrial.barcodescanner.presentation.screens.settings
 
 import android.content.Context
 import android.net.Uri
+import java.io.File
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.industrial.barcodescanner.data.local.catalog.ProductCatalogOpenHelper
@@ -18,10 +19,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -63,9 +64,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val count = catalogOpenHelper.productCount()
             val ts = context.getDatabasePath("products.db").lastModified()
-            val label = if (ts > 0L && count > 0) {
-                SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(ts))
-            } else if (count == 0) "Empty — pull from PC or import a file"
+            val label = if (ts > 0L && count > 0)
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                    .format(LocalDateTime.ofInstant(Instant.ofEpochMilli(ts), ZoneId.systemDefault()))
+            else if (count == 0) "Empty — pull from PC or import a file"
             else "Bundled"
             _uiState.update { it.copy(catalogCount = count, catalogLastUpdated = label) }
         }

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.industrial.barcodescanner.domain.model.ScannedItem
 import com.industrial.barcodescanner.domain.repository.ScannedItemRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -55,6 +56,7 @@ class HistoryViewModel @Inject constructor(
     private fun observeItems() {
         viewModelScope.launch {
             repository.getAllItems()
+                .flowOn(Dispatchers.Default)
                 .catch { e -> _uiState.update { it.copy(error = e.message) } }
                 .collect { items ->
                     _uiState.update { it.copy(allItems = items) }

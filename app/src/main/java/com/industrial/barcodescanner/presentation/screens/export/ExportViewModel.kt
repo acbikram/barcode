@@ -95,6 +95,7 @@ class ExportViewModel @Inject constructor(
     private fun observeItems() {
         viewModelScope.launch {
             repository.getAllItems()
+                .flowOn(Dispatchers.Default) // DB emission off the main thread
                 .catch { e -> _uiState.update { it.copy(error = e.message) } }
                 .collect { items -> _uiState.update { it.copy(allItems = items) } }
         }
