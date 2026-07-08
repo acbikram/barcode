@@ -32,6 +32,9 @@ interface ScannedItemDao {
     @Query("DELETE FROM scanned_items")
     suspend fun deleteAll()
 
+    @Query("DELETE FROM scanned_items WHERE createdAt < :cutoff")
+    suspend fun deleteOlderThan(cutoff: Long): Int
+
     @Query("DELETE FROM scanned_items WHERE id IN (:ids)")
     suspend fun deleteByIds(ids: List<Long>)
 

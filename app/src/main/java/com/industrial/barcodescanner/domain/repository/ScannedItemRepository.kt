@@ -14,6 +14,7 @@ interface ScannedItemRepository {
     suspend fun updateItem(item: ScannedItemEntity)
     suspend fun deleteItem(item: ScannedItem)
     suspend fun deleteAllItems()
+    suspend fun deleteItemsOlderThan(cutoff: Long): Int
     suspend fun deleteItemsByIds(ids: List<Long>)
     suspend fun deleteItemsByTagType(tagType: String)
     suspend fun deleteItemsByUnitType(unitType: String)

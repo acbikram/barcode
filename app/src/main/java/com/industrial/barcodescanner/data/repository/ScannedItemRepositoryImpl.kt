@@ -51,6 +51,8 @@ class ScannedItemRepositoryImpl @Inject constructor(
         dao.deleteAll()
     }
 
+    override suspend fun deleteItemsOlderThan(cutoff: Long): Int = dao.deleteOlderThan(cutoff)
+
     override suspend fun deleteItemsByIds(ids: List<Long>) {
         dao.deleteByIds(ids)
     }
