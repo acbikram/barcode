@@ -6,7 +6,7 @@ import com.industrial.barcodescanner.data.local.database.BarcodeDatabase
 import java.util.concurrent.TimeUnit
 
 /**
- * Deletes scan history items older than 8 hours.
+ * Deletes scan history items older than 24 hours.
  *
  * Runs every hour via WorkManager, plus once immediately on every app
  * launch (see [runNow]) so stale items never survive an app restart.
@@ -23,7 +23,7 @@ class HistoryCleanupWorker(
                 .scannedItemDao()
                 .deleteOlderThan(cutoff)
             if (deleted > 0) {
-                android.util.Log.i("HistoryCleanup", "Deleted $deleted item(s) older than 8h")
+                android.util.Log.i("HistoryCleanup", "Deleted $deleted item(s) older than 24h")
             }
             Result.success()
         } catch (_: Exception) {
@@ -33,7 +33,7 @@ class HistoryCleanupWorker(
 
     companion object {
         /** Items older than this are removed. */
-        private const val MAX_AGE_MS = 8L * 60 * 60 * 1000   // 8 hours
+        private const val MAX_AGE_MS = 24L * 60 * 60 * 1000   // 24 hours
 
         private const val PERIODIC_NAME = "history_cleanup_periodic"
         private const val ONESHOT_NAME  = "history_cleanup_now"
