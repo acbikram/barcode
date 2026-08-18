@@ -37,7 +37,7 @@ jobs:
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      run: ./gradlew clean assembleRelease --no-daemon --max-workers=1 --stacktrace
+      run: ./gradlew clean assembleRelease --no-daemon --max-workers=1 --stacktrace -Dorg.gradle.jvmargs="-Xmx2048m -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8"
 
     - name: Validate release APK
       run: |

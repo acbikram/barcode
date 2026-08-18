@@ -1,24 +1,16 @@
 package com.industrial.barcodescanner.presentation
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import com.industrial.barcodescanner.presentation.components.FirstLaunchLanguageDialog
 import com.industrial.barcodescanner.presentation.navigation.BarcodeToCsvNavHost
@@ -46,13 +38,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            val context = LocalContext.current
             val themeMode by preferencesManager.themeModeFlow.collectAsState(initial = "dark")
-            val notificationPromptShown by preferencesManager.notificationPermissionPromptShownFlow
-                .collectAsState(initial = false)
-            val notificationPermissionLauncher = rememberLauncherForActivityResult(
-                ActivityResultContracts.RequestPermission()
-            ) { }
             val useDarkTheme = when (themeMode) {
                 "light" -> false
                 "system" -> isSystemInDarkTheme()
@@ -67,19 +53,6 @@ class MainActivity : AppCompatActivity() {
 
                     // ── First-launch language picker ─────────────────────────
                     val showLanguagePrompt by firstLaunchViewModel.showLanguagePrompt.collectAsState()
-                    LaunchedEffect(showLanguagePrompt, notificationPromptShown) {
-                        val shouldRequestNotifications = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                            !showLanguagePrompt &&
-                            !notificationPromptShown &&
-                            ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.POST_NOTIFICATIONS
-                            ) != PackageManager.PERMISSION_GRANTED
-                        if (shouldRequestNotifications) {
-                            preferencesManager.setNotificationPermissionPromptShown()
-                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                    }
                     if (showLanguagePrompt) {
                         FirstLaunchLanguageDialog(
                             onDismiss = { firstLaunchViewModel.onLanguagePromptDismissed() }
