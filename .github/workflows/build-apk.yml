@@ -29,7 +29,7 @@ jobs:
       run: echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
 
     - name: Lint and test
-      run: ./gradlew lintDebug testDebugUnitTest --no-daemon --max-workers=2 --stacktrace
+      run: ./gradlew lintDebug testDebugUnitTest --no-daemon --max-workers=1 --stacktrace
 
     - name: Build signed release APK
       env:
@@ -37,7 +37,7 @@ jobs:
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      run: ./gradlew clean assembleRelease --no-daemon --max-workers=2 --stacktrace
+      run: ./gradlew clean assembleRelease --no-daemon --max-workers=1 --stacktrace
 
     - name: Validate release APK
       run: |
