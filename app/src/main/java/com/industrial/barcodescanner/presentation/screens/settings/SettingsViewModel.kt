@@ -36,8 +36,6 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     data class SettingsUiState(
-        val scanSound: Boolean = true,
-        val vibration: Boolean = true,
         val catalogCount: Int = 0,
         val catalogLastUpdated: String = "",
         val catalogImporting: Boolean = false,
@@ -62,12 +60,6 @@ class SettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            preferencesManager.scanSoundFlow.collect { v -> _uiState.update { it.copy(scanSound = v) } }
-        }
-        viewModelScope.launch {
-            preferencesManager.vibrationFlow.collect { v -> _uiState.update { it.copy(vibration = v) } }
-        }
-        viewModelScope.launch {
             preferencesManager.themeModeFlow.collect { mode -> _uiState.update { it.copy(themeMode = mode) } }
         }
         refreshCatalogInfo()
@@ -84,14 +76,6 @@ class SettingsViewModel @Inject constructor(
             else "Bundled"
             _uiState.update { it.copy(catalogCount = count, catalogLastUpdated = label) }
         }
-    }
-
-    fun toggleScanSound(enabled: Boolean) {
-        viewModelScope.launch { preferencesManager.setScanSound(enabled) }
-    }
-
-    fun toggleVibration(enabled: Boolean) {
-        viewModelScope.launch { preferencesManager.setVibration(enabled) }
     }
 
     fun setThemeMode(mode: String) {

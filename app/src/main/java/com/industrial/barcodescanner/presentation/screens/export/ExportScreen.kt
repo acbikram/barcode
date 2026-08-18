@@ -618,7 +618,9 @@ fun ExportScreen(
             }
         }
         AlertDialog(
-            onDismissRequest = { viewModel.submitWifiDecision(dismissChoice) },
+            // Keep the computer session waiting if Android temporarily dismisses
+            // this dialog while the app is backgrounded or the screen is locked.
+            onDismissRequest = { },
             icon = { Icon(Icons.Default.Wifi, contentDescription = null) },
             title = { Text(title) },
             text = {

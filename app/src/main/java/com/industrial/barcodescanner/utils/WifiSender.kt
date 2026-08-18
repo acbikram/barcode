@@ -27,7 +27,9 @@ object WifiSender {
     val PING: ByteArray = "PTAGPNG1".toByteArray(Charsets.US_ASCII)
     val GET_DB: ByteArray = "PTAGGDB1".toByteArray(Charsets.US_ASCII)
     private const val CONNECT_TIMEOUT_MS = 8_000
-    private const val READ_TIMEOUT_MS = 60_000   // PC heartbeats every ~20s keep this alive
+    // Allow a foreground transfer to wait through slower computer-side price lookup
+    // and print preparation while progress heartbeats continue to arrive.
+    private const val READ_TIMEOUT_MS = 180_000
     private const val DB_READ_TIMEOUT_MS = 180_000 // catalog can be ~20 MB over WiFi
     private const val MAX_CATALOG_BYTES = 100 * 1024 * 1024
     private const val MAX_CSV_PAYLOAD_BYTES = 32 * 1024 * 1024

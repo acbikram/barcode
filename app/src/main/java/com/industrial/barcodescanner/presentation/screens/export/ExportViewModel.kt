@@ -16,6 +16,7 @@ import com.industrial.barcodescanner.utils.WifiDiscovery
 import com.industrial.barcodescanner.utils.WifiPc
 import com.industrial.barcodescanner.utils.WifiReprintBus
 import com.industrial.barcodescanner.utils.WifiSender
+import com.industrial.barcodescanner.utils.WifiTransferForegroundService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -249,6 +250,9 @@ class ExportViewModel @Inject constructor(
             preferencesManager.setWifiHost(host)
             preferencesManager.setWifiPort(portInt.toString())
             _uiState.update { it.copy(wifiSending = true, wifiInfo = null, wifiStage = "connecting") }
+            // The socket exchange continues until the computer returns its result,
+            // even if this activity is backgrounded or the phone is locked.
+            WifiTransferForegroundService.start(context)
             try {
                 var payload = withContext(Dispatchers.IO) { payloadProvider() }
                 var looping = true
@@ -267,6 +271,7 @@ class ExportViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update { it.copy(wifiInfo = "FAILED:${e.message ?: e.toString()}") }
             } finally {
+                WifiTransferForegroundService.stop(context)
                 _uiState.update { it.copy(wifiSending = false, wifiStage = null, wifiDecision = null) }
             }
         }
@@ -277,6 +282,7 @@ class ExportViewModel @Inject constructor(
             WifiSender.Session(host, port).use { s ->
                 s.sendCsv(payload)
                 _uiState.update { it.copy(wifiStage = "checking") }
+                WifiTransferForegroundService.update(context, WifiTransferForegroundService.STAGE_CHECKING)
                 while (true) {
                     val msg = s.readMessage() ?: return@use WifiOutcome.Finished("DONE_CLOSED")
                     when (msg.optString("type")) {
@@ -288,6 +294,7 @@ class ExportViewModel @Inject constructor(
                             val retryCsv = msg.optString("retry_csv", "")
                             if (failed.isEmpty()) {
                                 _uiState.update { it.copy(wifiStage = "printing", wifiDecision = null) }
+                                WifiTransferForegroundService.update(context, WifiTransferForegroundService.STAGE_PRINTING)
                             } else if (ready > 0) {
                                 val choice = askDecision(
                                     WifiDecisionRequest(WifiDecisionKind.PrintOrCancel(ready), failed)
@@ -295,6 +302,7 @@ class ExportViewModel @Inject constructor(
                                 if (choice == "print") {
                                     s.sendDecision("print")
                                     _uiState.update { it.copy(wifiStage = "printing") }
+                                    WifiTransferForegroundService.update(context, WifiTransferForegroundService.STAGE_PRINTING)
                                 } else {
                                     s.sendDecision("cancel")
                                 }
@@ -335,7 +343,10 @@ class ExportViewModel @Inject constructor(
                         "cancelled" -> return@use WifiOutcome.Finished("CANCELLED")
                         "progress" -> {
                             val st = msg.optString("stage", "")
-                            if (st.isNotBlank()) _uiState.update { it.copy(wifiStage = st) }
+                            if (st.isNotBlank()) {
+                                _uiState.update { it.copy(wifiStage = st) }
+                                WifiTransferForegroundService.update(context, st)
+                            }
                         }
                         else -> {}
                     }

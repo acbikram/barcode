@@ -18,8 +18,6 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 @Singleton
 class PreferencesManager @Inject constructor(@ApplicationContext private val context: Context) {
 
-    private val scanSoundKey = booleanPreferencesKey("scan_sound")
-    private val vibrationKey = booleanPreferencesKey("vibration")
     private val languagePromptShownKey = booleanPreferencesKey("language_prompt_shown")
     private val themePromptShownKey = booleanPreferencesKey("theme_prompt_shown")
     private val lastTagTypeKey = stringPreferencesKey("last_tag_type")
@@ -29,14 +27,6 @@ class PreferencesManager @Inject constructor(@ApplicationContext private val con
     private val lastBatchCsvKey = stringPreferencesKey("last_batch_csv")
     private val themeModeKey = stringPreferencesKey("theme_mode")
     private val notificationPermissionPromptShownKey = booleanPreferencesKey("notification_permission_prompt_shown")
-
-    val scanSoundFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
-        prefs[scanSoundKey] ?: true
-    }
-
-    val vibrationFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
-        prefs[vibrationKey] ?: true
-    }
 
     /** One of dark, light, or system. Defaults to the original dark appearance. */
     val themeModeFlow: Flow<String> = context.dataStore.data.map { prefs ->
@@ -73,18 +63,6 @@ class PreferencesManager @Inject constructor(@ApplicationContext private val con
     suspend fun setNotificationPermissionPromptShown() {
         context.dataStore.edit { prefs ->
             prefs[notificationPermissionPromptShownKey] = true
-        }
-    }
-
-    suspend fun setScanSound(enabled: Boolean) {
-        context.dataStore.edit { prefs ->
-            prefs[scanSoundKey] = enabled
-        }
-    }
-
-    suspend fun setVibration(enabled: Boolean) {
-        context.dataStore.edit { prefs ->
-            prefs[vibrationKey] = enabled
         }
     }
 
