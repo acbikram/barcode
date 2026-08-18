@@ -83,19 +83,15 @@ class ScanViewModel @Inject constructor(
     val uiState: StateFlow<ScanUiState> = _uiState.asStateFlow()
 
     private data class ScanPreferences(
-        val scanSoundEnabled: Boolean = true,
-        val vibrationEnabled: Boolean = true,
         val lastTagType: String = "A4",
         val lastUnitType: String = "PCS"
     )
 
     private val scanPreferences: StateFlow<ScanPreferences> = combine(
-        preferencesManager.scanSoundFlow,
-        preferencesManager.vibrationFlow,
         preferencesManager.lastTagTypeFlow,
         preferencesManager.lastUnitTypeFlow
-    ) { scanSoundEnabled, vibrationEnabled, lastTagType, lastUnitType ->
-        ScanPreferences(scanSoundEnabled, vibrationEnabled, lastTagType, lastUnitType)
+    ) { lastTagType, lastUnitType ->
+        ScanPreferences(lastTagType, lastUnitType)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ScanPreferences())
 
     /** Top-20 most recently scanned items, ordered and limited by Room. */
@@ -163,8 +159,9 @@ class ScanViewModel @Inject constructor(
         stopScanner()
 
         val preferences = scanPreferences.value
-        if (preferences.scanSoundEnabled) soundManager.playSingleBeep()
-        if (preferences.vibrationEnabled) vibrateSingle()
+        // Scan feedback is intentionally always enabled for the barcode workflow.
+        soundManager.playSingleBeep()
+        vibrateSingle()
 
         val lastTagType = preferences.lastTagType
         val lastUnitType = preferences.lastUnitType

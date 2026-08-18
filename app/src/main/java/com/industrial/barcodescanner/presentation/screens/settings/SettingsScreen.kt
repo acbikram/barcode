@@ -4,6 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -149,33 +150,6 @@ fun SettingsScreen(
                 }
             }
 
-            // ── Scan Settings ───────────────────────────────────────────────
-            item {
-                SettingsCard(
-                    sectionId = "scanSettings",
-                    expandedSection = expandedSection,
-                    onExpandedSectionChange = { expandedSection = it },
-                    title = stringResource(R.string.scan_settings),
-                    collapsedSummary = stringResource(R.string.scan_settings_collapsed_description)
-                ) {
-                    SwitchRow(
-                        title = stringResource(R.string.beep_on_scan),
-                        subtitle = stringResource(R.string.beep_on_scan_subtitle),
-                        checked = uiState.scanSound,
-                        onCheckedChange = viewModel::toggleScanSound
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-                    Spacer(Modifier.height(8.dp))
-                    SwitchRow(
-                        title = stringResource(R.string.vibrate_on_scan),
-                        subtitle = stringResource(R.string.vibrate_on_scan_subtitle),
-                        checked = uiState.vibration,
-                        onCheckedChange = viewModel::toggleVibration
-                    )
-                }
-            }
-
             // ── Product Catalog ─────────────────────────────────────────────
             item {
                 SettingsCard(
@@ -267,6 +241,38 @@ fun SettingsScreen(
                             shape = MaterialTheme.shapes.small
                         ) { Text(stringResource(R.string.import_catalog_file)) }
                     }
+                }
+            }
+
+            // ── Data Management ─────────────────────────────────────────────
+            item {
+                SettingsCard(
+                    sectionId = "dataManagement",
+                    expandedSection = expandedSection,
+                    onExpandedSectionChange = { expandedSection = it },
+                    title = stringResource(R.string.data_management),
+                    collapsedSummary = stringResource(R.string.data_management_collapsed_description)
+                ) {
+                    GlassActionButton(
+                        label = stringResource(R.string.backup_restore),
+                        supportingText = stringResource(R.string.backup_restore_supporting),
+                        tone = GlassActionTone.Neutral,
+                        onClick = { expandedSection = null; navController.navigate(Screen.BackupRestore.route) }
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    GlassActionButton(
+                        label = stringResource(R.string.recycle_bin),
+                        supportingText = stringResource(R.string.recycle_bin_supporting),
+                        tone = GlassActionTone.Neutral,
+                        onClick = { expandedSection = null; navController.navigate(Screen.RecycleBin.route) }
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    GlassActionButton(
+                        label = stringResource(R.string.clear_all_records),
+                        supportingText = stringResource(R.string.clear_all_records_supporting),
+                        tone = GlassActionTone.Destructive,
+                        onClick = { expandedSection = null; showClearDialog = true }
+                    )
                 }
             }
 
@@ -381,37 +387,6 @@ fun SettingsScreen(
                 }
             }
 
-            // ── Data Management ─────────────────────────────────────────────
-            item {
-                SettingsCard(
-                    sectionId = "dataManagement",
-                    expandedSection = expandedSection,
-                    onExpandedSectionChange = { expandedSection = it },
-                    title = stringResource(R.string.data_management),
-                    collapsedSummary = stringResource(R.string.data_management_collapsed_description)
-                ) {
-                    GlassActionButton(
-                        label = stringResource(R.string.backup_restore),
-                        supportingText = stringResource(R.string.backup_restore_supporting),
-                        tone = GlassActionTone.Neutral,
-                        onClick = { expandedSection = null; navController.navigate(Screen.BackupRestore.route) }
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    GlassActionButton(
-                        label = stringResource(R.string.recycle_bin),
-                        supportingText = stringResource(R.string.recycle_bin_supporting),
-                        tone = GlassActionTone.Neutral,
-                        onClick = { expandedSection = null; navController.navigate(Screen.RecycleBin.route) }
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    GlassActionButton(
-                        label = stringResource(R.string.clear_all_records),
-                        supportingText = stringResource(R.string.clear_all_records_supporting),
-                        tone = GlassActionTone.Destructive,
-                        onClick = { expandedSection = null; showClearDialog = true }
-                    )
-                }
-            }
         }
     }
 
@@ -438,6 +413,7 @@ private fun SettingsCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val expanded = alwaysExpanded || expandedSection == sectionId
+    val headerInteraction = remember { MutableInteractionSource() }
     // Keep the card surface neutral while expanded; only the selected option is tinted.
     GlassSectionCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(AppDimens.CardPadding)) {
@@ -446,7 +422,10 @@ private fun SettingsCard(
                     .fillMaxWidth()
                     .then(
                         if (alwaysExpanded) Modifier
-                        else Modifier.clickable { onExpandedSectionChange(if (expanded) null else sectionId) }
+                        else Modifier.clickable(
+                            interactionSource = headerInteraction,
+                            indication = null
+                        ) { onExpandedSectionChange(if (expanded) null else sectionId) }
                     )
                     .padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
