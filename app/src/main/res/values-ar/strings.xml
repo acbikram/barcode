@@ -179,6 +179,8 @@
     <string name="edit_item">تعديل الصنف</string>
     <string name="manual_mode_enter">إدخال الباركود يدوياً</string>
     <string name="manual_mode_exit">الخروج من الإدخال اليدوي</string>
+    <string name="flash_on">تشغيل المصباح</string>
+    <string name="flash_off">إيقاف المصباح</string>
     <string name="failed_to_start_camera_format">فشل تشغيل الكاميرا: %1$s</string>
 
     <!-- طبقة الكاميرا غير النشطة -->
@@ -187,19 +189,23 @@
 
     <!-- شاشة الإعدادات -->
     <string name="scan_settings">إعدادات المسح</string>
+    <string name="scan_settings_collapsed_description">تخصيص تنبيهات مسح الباركود</string>
     <string name="beep_on_scan">صوت تنبيه عند المسح</string>
     <string name="beep_on_scan_subtitle">تشغيل صوت قصير عند اكتشاف الباركود</string>
     <string name="vibrate_on_scan">الاهتزاز عند المسح</string>
     <string name="vibrate_on_scan_subtitle">يهتز الهاتف عند اكتشاف الباركود</string>
     <string name="data_management">إدارة البيانات</string>
+    <string name="data_management_collapsed_description">إدارة النسخ الاحتياطية وبيانات التطبيق</string>
     <string name="clear_all_records">مسح جميع السجلات</string>
     <string name="clear_all_records_confirm">لا يمكن التراجع عن هذا الإجراء. هل أنت متأكد؟</string>
     <string name="language">اللغة</string>
     <string name="language_description">اختر لغة عرض التطبيق.</string>
+    <string name="language_collapsed_description">اضغط لاختيار لغة التطبيق</string>
     <string name="language_system_default">لغة النظام</string>
     <string name="language_english">English (الإنجليزية)</string>
     <string name="language_arabic">العربية</string>
     <string name="appearance">المظهر</string>
+    <string name="appearance_description">اختر مظهر التطبيق</string>
     <string name="theme_selection_description">اختر مظهر تطبيق باركود إلى CSV. يمكنك تغييره لاحقاً من الإعدادات.</string>
     <string name="theme_dark">داكن</string>
     <string name="theme_light">فاتح</string>
@@ -213,6 +219,7 @@
     <string name="theme_dark_settings_subtitle">لوحة داكنة عالية التباين</string>
     <string name="theme_light_settings_subtitle">مساحة عمل مشرقة وواضحة</string>
     <string name="theme_system_settings_subtitle">اتبع إعدادات جهازك</string>
+    <string name="catalog_collapsed_description">إدارة كتالوج منتجات الباركود</string>
     <string name="importing">جارٍ الاستيراد…</string>
     <string name="import_catalog_file">استيراد ملف (CSV أو .db)</string>
     <string name="backup_restore_supporting">إنشاء نسخة احتياطية أو استعادتها</string>

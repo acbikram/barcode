@@ -17,6 +17,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FlashOff
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
@@ -51,6 +53,8 @@ import com.industrial.barcodescanner.presentation.theme.GreenAccent
 import com.industrial.barcodescanner.presentation.theme.OrangeAccent
 import com.industrial.barcodescanner.presentation.theme.SubtleGray
 import com.industrial.barcodescanner.presentation.theme.SurfaceDark
+import com.industrial.barcodescanner.presentation.theme.SurfaceVariant
+import com.industrial.barcodescanner.presentation.theme.YellowAccent
 import com.industrial.barcodescanner.utils.LanguageManager
 import java.time.Instant
 import java.time.LocalDateTime
@@ -130,8 +134,17 @@ fun ScanScreen(
         }
     }
 
+    // CameraX automatically disables the torch when unbound. Reapply the user's
+    // choice whenever the camera returns from idle/manual mode to active scanning.
+    LaunchedEffect(isCameraBound, uiState.torchEnabled) {
+        if (isCameraBound) {
+            try { cameraController.enableTorch(uiState.torchEnabled) } catch (_: Exception) {}
+        }
+    }
+
     DisposableEffect(Unit) {
         onDispose {
+            try { cameraController.enableTorch(false) } catch (_: Exception) {}
             try { if (isCameraBound) cameraController.unbind() } catch (_: Exception) {}
             viewModel.stopScanner()
         }
@@ -164,7 +177,23 @@ fun ScanScreen(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // ── Manual entry shortcut (above camera button) ──────────
+                    // ── Flashlight (camera scan mode only) ───────────────────
+                    if (!uiState.showManualMode) {
+                        SmallFloatingActionButton(
+                            onClick = viewModel::toggleTorch,
+                            containerColor = if (uiState.torchEnabled) YellowAccent else SurfaceVariant,
+                            contentColor = if (uiState.torchEnabled) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant
+                        ) {
+                            Icon(
+                                imageVector = if (uiState.torchEnabled) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
+                                contentDescription = stringResource(
+                                    if (uiState.torchEnabled) R.string.flash_off else R.string.flash_on
+                                )
+                            )
+                        }
+                    }
+
+                    // ── Manual entry / camera return switch ──────────────────
                     SmallFloatingActionButton(
                         onClick = {
                             if (uiState.showManualMode) viewModel.exitManualMode()
@@ -174,7 +203,11 @@ fun ScanScreen(
                         contentColor = Color.Black
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Keyboard,
+                            imageVector = if (uiState.showManualMode) {
+                                Icons.Filled.PhotoCamera
+                            } else {
+                                Icons.Filled.Keyboard
+                            },
                             contentDescription = if (uiState.showManualMode)
                                 stringResource(R.string.manual_mode_exit)
                             else
