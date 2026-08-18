@@ -8,14 +8,14 @@ plugins {
 
 android {
     namespace = "com.industrial.barcodescanner"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.industrial.barcodescanner"
         minSdk = 29
         targetSdk = 34
-        versionCode = 12
-        versionName = "2.0.1"
+        versionCode = 13
+        versionName = "2.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -72,6 +72,14 @@ android {
         compose = true
     }
 
+    // Keep shared libraries uncompressed so AGP 8.5.1+ can align them on
+    // 16 KB ZIP boundaries for Android 15/16 devices with 16 KB pages.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.10"
     }
@@ -111,12 +119,14 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
 
-    implementation("androidx.camera:camera-core:1.3.3")
-    implementation("androidx.camera:camera-camera2:1.3.3")
-    implementation("androidx.camera:camera-lifecycle:1.3.3")
-    implementation("androidx.camera:camera-view:1.3.3")
+    // Android 16-compatible camera/scanning stack. These releases ship
+    // arm64 native libraries with 16 KB ELF segment alignment.
+    implementation("androidx.camera:camera-core:1.5.1")
+    implementation("androidx.camera:camera-camera2:1.5.1")
+    implementation("androidx.camera:camera-lifecycle:1.5.1")
+    implementation("androidx.camera:camera-view:1.5.1")
 
-    implementation("com.google.mlkit:barcode-scanning:17.2.0")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
 
     implementation("androidx.datastore:datastore-preferences:1.1.0")
 
