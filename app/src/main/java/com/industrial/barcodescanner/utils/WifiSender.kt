@@ -29,6 +29,8 @@ object WifiSender {
     private const val CONNECT_TIMEOUT_MS = 8_000
     private const val READ_TIMEOUT_MS = 60_000   // PC heartbeats every ~20s keep this alive
     private const val DB_READ_TIMEOUT_MS = 180_000 // catalog can be ~20 MB over WiFi
+    private const val MAX_CATALOG_BYTES = 100 * 1024 * 1024
+    private const val MAX_CSV_PAYLOAD_BYTES = 32 * 1024 * 1024
 
     fun csvBytes(items: List<ScannedItem>): ByteArray =
         ByteArrayOutputStream().use { baos ->
@@ -57,6 +59,7 @@ object WifiSender {
                     ((lenBuf[2].toInt() and 0xFF) shl 8) or
                     (lenBuf[3].toInt() and 0xFF)
             if (n <= 0) return 0L
+            if (n > MAX_CATALOG_BYTES) throw IOException("Catalog transfer is too large (${n} bytes).")
             var remaining = n.toLong()
             val buf = ByteArray(65536)
             var total = 0L
@@ -110,6 +113,9 @@ object WifiSender {
         }
 
         fun sendCsv(payload: ByteArray) {
+            require(payload.size <= MAX_CSV_PAYLOAD_BYTES) {
+                "Export is too large for Wi-Fi transfer. Split the selection and try again."
+            }
             val out = socket.getOutputStream()
             out.write(MAGIC)
             val n = payload.size

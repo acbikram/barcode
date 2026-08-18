@@ -1,5 +1,6 @@
 package com.industrial.barcodescanner.data.repository
 
+import com.industrial.barcodescanner.data.local.dao.DashboardSummary
 import com.industrial.barcodescanner.data.local.dao.ScannedItemDao
 import com.industrial.barcodescanner.data.local.dao.TagTypeCount
 import com.industrial.barcodescanner.data.local.dao.UnitTypeCount
@@ -27,6 +28,18 @@ class ScannedItemRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getRecentItems(limit: Int): Flow<List<ScannedItem>> {
+        return dao.getRecentItems(limit).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    override fun getDeletedItems(): Flow<List<ScannedItem>> {
+        return dao.getDeletedItems().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
     override suspend fun getItemById(id: Long): ScannedItem? {
         return dao.getItemById(id)?.toDomain()
     }
@@ -44,26 +57,40 @@ class ScannedItemRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteItem(item: ScannedItem) {
-        dao.delete(item.toEntity())
+        dao.moveToRecycleBin(item.id, System.currentTimeMillis())
     }
 
     override suspend fun deleteAllItems() {
-        dao.deleteAll()
+        dao.moveAllToRecycleBin(System.currentTimeMillis())
     }
 
     override suspend fun deleteItemsOlderThan(cutoff: Long): Int = dao.deleteOlderThan(cutoff)
 
     override suspend fun deleteItemsByIds(ids: List<Long>) {
-        dao.deleteByIds(ids)
+        dao.moveToRecycleBinByIds(ids, System.currentTimeMillis())
     }
 
     override suspend fun deleteItemsByTagType(tagType: String) {
-        dao.deleteByTagType(tagType)
+        dao.moveToRecycleBinByTagType(tagType, System.currentTimeMillis())
     }
 
     override suspend fun deleteItemsByUnitType(unitType: String) {
-        dao.deleteByUnitType(unitType)
+        dao.moveToRecycleBinByUnitType(unitType, System.currentTimeMillis())
     }
+
+    override suspend fun restoreItems(ids: List<Long>) {
+        dao.restoreFromRecycleBin(ids)
+    }
+
+    override suspend fun permanentlyDeleteItems(ids: List<Long>) {
+        dao.permanentlyDelete(ids)
+    }
+
+    override suspend fun emptyRecycleBin() {
+        dao.emptyRecycleBin()
+    }
+
+    override fun getDashboardSummary(): Flow<DashboardSummary> = dao.getDashboardSummary()
 
     override fun getTagTypeCounts(): Flow<List<TagTypeCount>> = dao.getTagTypeCounts()
 

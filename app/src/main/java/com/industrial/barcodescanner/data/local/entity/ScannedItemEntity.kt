@@ -16,7 +16,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 @Entity(
     tableName = "scanned_items",
-    indices = [Index(value = ["barcode", "tagType", "unitType"])]
+    indices = [
+        Index(value = ["barcode", "tagType", "unitType"]),
+        Index(value = ["createdAt"]),
+        Index(value = ["deletedAt"])
+    ]
 )
 data class ScannedItemEntity(
     @PrimaryKey(autoGenerate = true)
@@ -35,7 +39,9 @@ data class ScannedItemEntity(
     /** Number of copies of this price tag to print. */
     val copies: Int = 1,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
+    /** Null for active records; populated when a record is moved to the recycle bin. */
+    val deletedAt: Long? = null
 )
 
 fun ScannedItemEntity.toDomain() = ScannedItem(
@@ -48,7 +54,8 @@ fun ScannedItemEntity.toDomain() = ScannedItem(
     unitType = unitType,
     copies = copies,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    deletedAt = deletedAt
 )
 
 fun ScannedItem.toEntity() = ScannedItemEntity(
@@ -61,5 +68,6 @@ fun ScannedItem.toEntity() = ScannedItemEntity(
     unitType = unitType,
     copies = copies,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    deletedAt = deletedAt
 )

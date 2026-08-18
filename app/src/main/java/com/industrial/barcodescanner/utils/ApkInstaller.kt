@@ -3,10 +3,12 @@ package com.industrial.barcodescanner.utils
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.os.Build
+import android.content.pm.PackageManager
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -73,15 +75,18 @@ object ApkInstaller {
     fun postUpdateNotification(context: Context, versionName: String) {
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            nm.createNotificationChannel(
-                NotificationChannel(
-                    CHANNEL_ID,
-                    "App Updates",
-                    NotificationManager.IMPORTANCE_DEFAULT
-                ).apply { description = "Notifies when a new version is available" }
-            )
-        }
+        nm.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL_ID,
+                "App Updates",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply { description = "Notifies when a new version is available" }
+        )
+
+        // Android 13+ requires a runtime grant before an app can post a notification.
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) return
 
         // Tapping the notification opens the app's launcher activity
         val launchIntent = context.packageManager

@@ -13,7 +13,7 @@ import com.industrial.barcodescanner.data.local.entity.WifiPrintHistoryEntity
 
 @Database(
     entities = [ScannedItemEntity::class, WifiPrintHistoryEntity::class],
-    version = 3,
+    version = 5,
     exportSchema = false
 )
 abstract class BarcodeDatabase : RoomDatabase() {
@@ -74,6 +74,28 @@ abstract class BarcodeDatabase : RoomDatabase() {
             }
         }
 
+        // v3 -> v4: add an index for the ORDER BY createdAt DESC queries used
+        // by dashboard and scanner recent-item feeds.
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_scanned_items_createdAt` " +
+                        "ON `scanned_items` (`createdAt`)"
+                )
+            }
+        }
+
+        // v4 -> v5: keep user records recoverable after deletion.
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `scanned_items` ADD COLUMN `deletedAt` INTEGER")
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_scanned_items_deletedAt` " +
+                        "ON `scanned_items` (`deletedAt`)"
+                )
+            }
+        }
+
         fun getInstance(context: Context): BarcodeDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -81,7 +103,7 @@ abstract class BarcodeDatabase : RoomDatabase() {
                     BarcodeDatabase::class.java,
                     "barcode_to_csv_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                 INSTANCE = instance
                 instance

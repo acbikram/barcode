@@ -18,12 +18,10 @@ import com.industrial.barcodescanner.utils.PreferencesManager
 import com.industrial.barcodescanner.utils.SoundManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -81,10 +79,24 @@ class ScanViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ScanUiState())
     val uiState: StateFlow<ScanUiState> = _uiState.asStateFlow()
 
-    /** Top-20 most recently scanned items, updated automatically by Room. */
-    val recentScans: StateFlow<List<ScannedItem>> = repository.getAllItems()
-        .map { items -> items.sortedByDescending { it.createdAt }.take(20) }
-        .flowOn(Dispatchers.Default)
+    private data class ScanPreferences(
+        val scanSoundEnabled: Boolean = true,
+        val vibrationEnabled: Boolean = true,
+        val lastTagType: String = "A4",
+        val lastUnitType: String = "PCS"
+    )
+
+    private val scanPreferences: StateFlow<ScanPreferences> = combine(
+        preferencesManager.scanSoundFlow,
+        preferencesManager.vibrationFlow,
+        preferencesManager.lastTagTypeFlow,
+        preferencesManager.lastUnitTypeFlow
+    ) { scanSoundEnabled, vibrationEnabled, lastTagType, lastUnitType ->
+        ScanPreferences(scanSoundEnabled, vibrationEnabled, lastTagType, lastUnitType)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ScanPreferences())
+
+    /** Top-20 most recently scanned items, ordered and limited by Room. */
+    val recentScans: StateFlow<List<ScannedItem>> = repository.getRecentItems(20)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private var scanTimeoutJob: Job = Job().also { it.cancel() }
@@ -142,11 +154,12 @@ class ScanViewModel @Inject constructor(
         if (_uiState.value.pendingBarcode.isNotEmpty()) return  // already processing one
         stopScanner()
 
-        if (preferencesManager.isScanSoundEnabled()) soundManager.playSingleBeep()
-        if (preferencesManager.isVibrationEnabled()) vibrateSingle()
+        val preferences = scanPreferences.value
+        if (preferences.scanSoundEnabled) soundManager.playSingleBeep()
+        if (preferences.vibrationEnabled) vibrateSingle()
 
-        val lastTagType = preferencesManager.getLastTagType()
-        val lastUnitType = preferencesManager.getLastUnitType()
+        val lastTagType = preferences.lastTagType
+        val lastUnitType = preferences.lastUnitType
 
         _uiState.update {
             it.copy(
@@ -387,13 +400,9 @@ class ScanViewModel @Inject constructor(
 
     /** Single short vibration (new barcode / pickers). */
     private fun vibrateSingle() {
-        val vibrator = getVibrator()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator?.vibrate(VibrationEffect.createOneShot(120, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator?.vibrate(120)
-        }
+        getVibrator()?.vibrate(
+            VibrationEffect.createOneShot(120, VibrationEffect.DEFAULT_AMPLITUDE)
+        )
     }
 
     private fun getVibrator(): Vibrator? {

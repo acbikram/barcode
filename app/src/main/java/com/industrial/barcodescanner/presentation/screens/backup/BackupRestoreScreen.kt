@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.industrial.barcodescanner.R
+import com.industrial.barcodescanner.presentation.components.GlassActionButton
+import com.industrial.barcodescanner.presentation.components.GlassActionTone
+import com.industrial.barcodescanner.presentation.components.GlassSectionCard
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,40 +69,60 @@ fun BackupRestoreScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Button(
-                    onClick = { backupLauncher.launch("BarcodeToCsv_backup_${System.currentTimeMillis()}.json") },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isLoading
-                ) {
-                    Text(stringResource(R.string.backup_database))
-                }
-                Button(
-                    onClick = { restoreLauncher.launch(arrayOf("application/json")) },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isLoading
-                ) {
-                    Text(stringResource(R.string.restore_database))
+                GlassSectionCard {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(stringResource(R.string.backup_restore), style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Protect your scans with a portable backup, or restore a previous working set.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        GlassActionButton(
+                            label = stringResource(R.string.backup_database),
+                            supportingText = "Save active barcode records as JSON",
+                            tone = GlassActionTone.Success,
+                            enabled = !uiState.isLoading,
+                            onClick = { backupLauncher.launch("BarcodeToCsv_backup_${System.currentTimeMillis()}.json") }
+                        )
+                        GlassActionButton(
+                            label = stringResource(R.string.restore_database),
+                            supportingText = "Replace active records; previous records remain recoverable",
+                            tone = GlassActionTone.Warning,
+                            enabled = !uiState.isLoading,
+                            onClick = { restoreLauncher.launch(arrayOf("application/json")) }
+                        )
+                    }
                 }
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                Text(
-                    stringResource(R.string.update_catalog_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Button(
-                    onClick = { catalogLauncher.launch(arrayOf("*/*")) },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isLoading
-                ) {
-                    Text(stringResource(R.string.update_catalog))
-                }
-                OutlinedButton(
-                    onClick = { viewModel.pullCatalogFromPc() },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isLoading
-                ) {
-                    Text(stringResource(R.string.update_catalog_wifi))
+                GlassSectionCard {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(stringResource(R.string.update_catalog), style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            stringResource(R.string.update_catalog_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        GlassActionButton(
+                            label = "Import catalog file",
+                            supportingText = "Choose a CSV or SQLite product catalog",
+                            tone = GlassActionTone.Neutral,
+                            enabled = !uiState.isLoading,
+                            onClick = { catalogLauncher.launch(arrayOf("*/*")) }
+                        )
+                        GlassActionButton(
+                            label = stringResource(R.string.update_catalog_wifi),
+                            supportingText = "Discover a PC and receive its current catalog",
+                            tone = GlassActionTone.Neutral,
+                            enabled = !uiState.isLoading,
+                            onClick = viewModel::pullCatalogFromPc
+                        )
+                    }
                 }
             }
 

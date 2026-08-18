@@ -44,11 +44,12 @@ class BackupRestoreViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null, success = false) }
             try {
-                val items = repository.getAllItems().first()
-                val entities: List<ScannedItemEntity> = items.map { it.toEntity() }
-                val contentResolver: ContentResolver = context.contentResolver
-                contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    JsonBackup.exportToJson(outputStream, entities)
+                withContext(Dispatchers.IO) {
+                    val entities: List<ScannedItemEntity> = repository.getAllItems().first().map { it.toEntity() }
+                    val contentResolver: ContentResolver = context.contentResolver
+                    val outputStream = contentResolver.openOutputStream(uri)
+                        ?: throw IllegalStateException("Could not open the selected backup destination.")
+                    outputStream.use { JsonBackup.exportToJson(it, entities) }
                 }
                 _uiState.update { it.copy(isLoading = false, success = true) }
             } catch (e: Exception) {
@@ -61,11 +62,16 @@ class BackupRestoreViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null, success = false) }
             try {
-                val contentResolver = context.contentResolver
-                contentResolver.openInputStream(uri)?.use { inputStream ->
-                    val entities = JsonBackup.importFromJson(inputStream)
-                    repository.deleteAllItems()
-                    entities.forEach { repository.insertItem(it) }
+                val restoredRecords = withContext(Dispatchers.IO) {
+                    val inputStream = context.contentResolver.openInputStream(uri)
+                        ?: throw IllegalStateException("Could not open the selected backup file.")
+                    inputStream.use { JsonBackup.importFromJson(it) }
+                }
+                // Current records are recoverable from the recycle bin. Reset IDs so a
+                // backup never collides with records retained there from an earlier import.
+                repository.deleteAllItems()
+                restoredRecords.forEach { entity ->
+                    repository.insertItem(entity.copy(id = 0, deletedAt = null))
                 }
                 _uiState.update { it.copy(isLoading = false, success = true) }
             } catch (e: Exception) {

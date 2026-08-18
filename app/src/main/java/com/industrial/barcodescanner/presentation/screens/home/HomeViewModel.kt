@@ -40,30 +40,54 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        observeItems()
+        observeDashboard()
         observeWifiStats()
         checkCatalog()
     }
 
-    private fun observeItems() {
+    private fun observeDashboard() {
         viewModelScope.launch {
-            repository.getAllItems()
-                .flowOn(Dispatchers.Default)
-                .catch { e -> _uiState.update { it.copy(error = e.message) } }
-                .collect { allItems ->
+            combine(
+                repository.getDashboardSummary(),
+                repository.getTagTypeCounts(),
+                repository.getUnitTypeCounts(),
+                repository.getRecentItems(limit = 5)
+            ) { summary, tagCounts, unitCounts, recentItems ->
+                DashboardData(
+                    totalRecords = summary.totalRecords,
+                    totalCopies = summary.totalCopies,
+                    tagTypeCounts = TAG_TYPES.associateWith { tagType ->
+                        tagCounts.firstOrNull { it.tagType == tagType }?.count ?: 0
+                    },
+                    unitTypeCounts = UNIT_TYPES.associateWith { unitType ->
+                        unitCounts.firstOrNull { it.unitType == unitType }?.count ?: 0
+                    },
+                    recentItems = recentItems
+                )
+            }
+                .catch { error -> _uiState.update { it.copy(error = error.message) } }
+                .collect { dashboard ->
                     _uiState.update {
                         it.copy(
-                            totalRecords  = allItems.size,
-                            totalCopies   = allItems.sumOf { i -> i.copies },
-                            tagTypeCounts = TAG_TYPES.associateWith  { t -> allItems.count { i -> i.tagType  == t } },
-                            unitTypeCounts = UNIT_TYPES.associateWith { u -> allItems.count { i -> i.unitType == u } },
-                            recentItems   = allItems.sortedByDescending { i -> i.createdAt }.take(5),
+                            totalRecords = dashboard.totalRecords,
+                            totalCopies = dashboard.totalCopies,
+                            tagTypeCounts = dashboard.tagTypeCounts,
+                            unitTypeCounts = dashboard.unitTypeCounts,
+                            recentItems = dashboard.recentItems,
                             error = null
                         )
                     }
                 }
         }
     }
+
+    private data class DashboardData(
+        val totalRecords: Int,
+        val totalCopies: Int,
+        val tagTypeCounts: Map<String, Int>,
+        val unitTypeCounts: Map<String, Int>,
+        val recentItems: List<ScannedItem>
+    )
 
     private fun observeWifiStats() {
         val startOfToday = LocalDateTime.now()

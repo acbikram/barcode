@@ -12,7 +12,8 @@ data class ScannedItem(
     val unitType: String = "PCS",
     val copies: Int = 1,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val deletedAt: Long? = null
 ) {
     /**
      * The product description shown in the UI, in the user's selected

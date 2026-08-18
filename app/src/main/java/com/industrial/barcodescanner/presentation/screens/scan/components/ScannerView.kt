@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicReference
  */
 private const val CONFIRM_DURATION_MS = 500L
 
+@androidx.annotation.OptIn(markerClass = [ExperimentalGetImage::class])
 @Composable
 fun ScannerView(
     cameraController: LifecycleCameraController,
@@ -41,6 +42,7 @@ fun ScannerView(
 
     DisposableEffect(Unit) {
         onDispose {
+            cameraController.clearImageAnalysisAnalyzer()
             barcodeScanner.close()
             executor.shutdown()
         }
@@ -78,7 +80,7 @@ fun ScannerView(
     )
 }
 
-@OptIn(ExperimentalGetImage::class)
+@ExperimentalGetImage
 private fun processImageProxy(
     scanner: com.google.mlkit.vision.barcode.BarcodeScanner,
     imageProxy: ImageProxy,

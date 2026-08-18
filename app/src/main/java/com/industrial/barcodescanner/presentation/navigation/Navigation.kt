@@ -15,6 +15,7 @@ import com.industrial.barcodescanner.presentation.screens.settings.SettingsScree
 import com.industrial.barcodescanner.presentation.screens.wifihistory.WifiHistoryScreen
 import com.industrial.barcodescanner.presentation.screens.detail.DetailScreen
 import com.industrial.barcodescanner.presentation.screens.backup.BackupRestoreScreen
+import com.industrial.barcodescanner.presentation.screens.recyclebin.RecycleBinScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -29,6 +30,7 @@ sealed class Screen(val route: String) {
         fun passId(id: Long): String = "detail/$id"
     }
     object BackupRestore : Screen("backup_restore")
+    object RecycleBin : Screen("recycle_bin")
     object WifiHistory : Screen("wifi_history")
 }
 
@@ -82,6 +84,9 @@ fun BarcodeToCsvNavHost(modifier: Modifier = Modifier) {
         }
         composable(Screen.BackupRestore.route) {
             BackupRestoreScreen(navController)
+        }
+        composable(Screen.RecycleBin.route) {
+            RecycleBinScreen(navController)
         }
         composable(Screen.WifiHistory.route) {
             WifiHistoryScreen(navController)

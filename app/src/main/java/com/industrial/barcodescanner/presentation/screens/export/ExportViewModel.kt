@@ -79,17 +79,39 @@ class ExportViewModel @Inject constructor(
             }).sortedBy { it.createdAt }
     }
 
+    private data class WifiPreferences(
+        val host: String = "",
+        val port: String = "8765",
+        val lastBatchCsv: String = ""
+    )
+
+    private val wifiPreferences: StateFlow<WifiPreferences> = combine(
+        preferencesManager.wifiHostFlow,
+        preferencesManager.wifiPortFlow,
+        preferencesManager.lastBatchCsvFlow
+    ) { host, port, lastBatchCsv ->
+        WifiPreferences(host, port, lastBatchCsv)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), WifiPreferences())
+
     private val _uiState = MutableStateFlow(ExportUiState())
     val uiState: StateFlow<ExportUiState> = _uiState.asStateFlow()
 
     init {
         observeItems()
-        _uiState.update {
-            it.copy(
-                wifiHost = preferencesManager.getWifiHost(),
-                wifiPort = preferencesManager.getWifiPort(),
-                hasLastBatch = preferencesManager.getLastBatchCsv().isNotBlank()
-            )
+        observeWifiPreferences()
+    }
+
+    private fun observeWifiPreferences() {
+        viewModelScope.launch {
+            wifiPreferences.collect { preferences ->
+                _uiState.update { current ->
+                    current.copy(
+                        wifiHost = if (current.wifiHost.isBlank()) preferences.host else current.wifiHost,
+                        wifiPort = if (current.wifiPort == "8765") preferences.port else current.wifiPort,
+                        hasLastBatch = preferences.lastBatchCsv.isNotBlank()
+                    )
+                }
+            }
         }
     }
 
@@ -136,8 +158,11 @@ class ExportViewModel @Inject constructor(
             _uiState.update { it.copy(isExporting = true, error = null, success = false) }
             try {
                 val items = _uiState.value.exportItems
-                val cr: ContentResolver = context.contentResolver
-                cr.openOutputStream(uri)?.use { CsvExporter.writeCsv(it, items) }
+                withContext(Dispatchers.IO) {
+                    val outputStream = context.contentResolver.openOutputStream(uri)
+                        ?: throw IllegalStateException("Could not open the selected export destination.")
+                    outputStream.use { CsvExporter.writeCsv(it, items) }
+                }
                 _uiState.update { it.copy(isExporting = false, success = true) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isExporting = false, error = e.message) }
@@ -181,22 +206,20 @@ class ExportViewModel @Inject constructor(
         if (validateHostPort() == null) return
         val items = _uiState.value.exportItems
         if (items.isEmpty()) { _uiState.update { it.copy(wifiInfo = "EMPTY") }; return }
-        val bytes = WifiSender.csvBytes(items)
-        val csvText = String(bytes, Charsets.UTF_8).removePrefix("\uFEFF")
-        rememberLastBatch(csvText)
-        launchShare { bytes }
+        launchShare {
+            val bytes = WifiSender.csvBytes(items)
+            val csvText = String(bytes, Charsets.UTF_8).removePrefix("\uFEFF")
+            preferencesManager.setLastBatchCsv(csvText)
+            _uiState.update { it.copy(hasLastBatch = true) }
+            bytes
+        }
     }
 
     fun resendLastBatch() {
         if (validateHostPort() == null) return
-        val csv = preferencesManager.getLastBatchCsv()
+        val csv = wifiPreferences.value.lastBatchCsv
         if (csv.isBlank()) { _uiState.update { it.copy(wifiInfo = "EMPTY") }; return }
         launchShare { WifiSender.csvBytesFromText(csv) }
-    }
-
-    private fun rememberLastBatch(csvText: String) {
-        viewModelScope.launch { preferencesManager.setLastBatchCsv(csvText) }
-        _uiState.update { it.copy(hasLastBatch = true) }
     }
 
     fun shareCsvViaWifi(csvText: String) {
@@ -398,7 +421,9 @@ class ExportViewModel @Inject constructor(
     fun discoverPcs() {
         viewModelScope.launch {
             _uiState.update { it.copy(discovering = true, discovered = emptyList()) }
-            val pcs = withContext(Dispatchers.IO) { WifiDiscovery.discover(context, 2500, preferencesManager.getWifiHost().ifBlank { null }) }
+            val pcs = withContext(Dispatchers.IO) {
+                WifiDiscovery.discover(context, 2500, wifiPreferences.value.host.ifBlank { null })
+            }
             _uiState.update {
                 it.copy(discovering = false, discovered = pcs,
                     wifiInfo = if (pcs.isEmpty()) "NO_PCS" else null)

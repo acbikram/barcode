@@ -6,7 +6,8 @@ import com.industrial.barcodescanner.data.local.database.BarcodeDatabase
 import java.util.concurrent.TimeUnit
 
 /**
- * Deletes scan history items older than 24 hours.
+ * Deletes active scan history items older than 24 hours and keeps recycled
+ * records available for restoration for a separate recovery window.
  *
  * Runs every hour via WorkManager, plus once immediately on every app
  * launch (see [runNow]) so stale items never survive an app restart.
@@ -18,12 +19,14 @@ class HistoryCleanupWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            val cutoff = System.currentTimeMillis() - MAX_AGE_MS
-            val deleted = BarcodeDatabase.getInstance(context)
-                .scannedItemDao()
-                .deleteOlderThan(cutoff)
-            if (deleted > 0) {
-                android.util.Log.i("HistoryCleanup", "Deleted $deleted item(s) older than 24h")
+            val dao = BarcodeDatabase.getInstance(context).scannedItemDao()
+            val activeDeleted = dao.deleteOlderThan(System.currentTimeMillis() - ACTIVE_MAX_AGE_MS)
+            val recycledDeleted = dao.deleteRecycledOlderThan(System.currentTimeMillis() - RECYCLE_BIN_MAX_AGE_MS)
+            if (activeDeleted > 0 || recycledDeleted > 0) {
+                android.util.Log.i(
+                    "HistoryCleanup",
+                    "Removed $activeDeleted expired active item(s) and $recycledDeleted expired recycled item(s)"
+                )
             }
             Result.success()
         } catch (_: Exception) {
@@ -32,8 +35,10 @@ class HistoryCleanupWorker(
     }
 
     companion object {
-        /** Items older than this are removed. */
-        private const val MAX_AGE_MS = 24L * 60 * 60 * 1000   // 24 hours
+        /** Active history is intentionally short-lived for the printing workflow. */
+        private const val ACTIVE_MAX_AGE_MS = 24L * 60 * 60 * 1000   // 24 hours
+        /** Restorable records remain available long enough to recover accidental deletions. */
+        private const val RECYCLE_BIN_MAX_AGE_MS = 30L * 24 * 60 * 60 * 1000 // 30 days
 
         private const val PERIODIC_NAME = "history_cleanup_periodic"
         private const val ONESHOT_NAME  = "history_cleanup_now"

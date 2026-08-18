@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.sp
 import com.industrial.barcodescanner.presentation.theme.CyanAccent
 import com.industrial.barcodescanner.presentation.theme.SubtleGray
 import com.industrial.barcodescanner.presentation.theme.SurfaceDark
-import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 val WHEEL_ITEM_HEIGHT: Dp = 48.dp
@@ -54,7 +53,7 @@ fun WheelPicker(
 
     val listState  = rememberLazyListState(initialFirstVisibleItemIndex = selectedIndex)
     val snapFling  = rememberSnapFlingBehavior(lazyListState = listState)
-    val scope      = rememberCoroutineScope()
+    val centeredIndex by remember { derivedStateOf { listState.firstVisibleItemIndex } }
     var wasScrolling by remember { mutableStateOf(false) }
 
     LaunchedEffect(listState.isScrollInProgress) {
@@ -70,12 +69,8 @@ fun WheelPicker(
     }
 
     LaunchedEffect(selectedIndex) {
-        if (!listState.isScrollInProgress &&
-            listState.firstVisibleItemIndex != selectedIndex
-        ) {
-            scope.launch {
-                listState.animateScrollToItem(selectedIndex)
-            }
+        if (!listState.isScrollInProgress && centeredIndex != selectedIndex) {
+            listState.animateScrollToItem(selectedIndex)
         }
     }
 
@@ -86,7 +81,7 @@ fun WheelPicker(
         modifier       = modifier.height(WHEEL_ITEM_HEIGHT * WHEEL_VISIBLE_ITEMS)
     ) {
         items(items.size) { idx ->
-            val distance = abs(listState.firstVisibleItemIndex - idx).coerceAtMost(WHEEL_PADDING_ITEMS + 1)
+            val distance = abs(centeredIndex - idx).coerceAtMost(WHEEL_PADDING_ITEMS + 1)
 
             val alpha = when (distance) {
                 0    -> 1.00f

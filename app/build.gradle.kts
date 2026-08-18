@@ -14,8 +14,8 @@ android {
         applicationId = "com.industrial.barcodescanner"
         minSdk = 29
         targetSdk = 34
-        versionCode = 10
-        versionName = "1.9"
+        versionCode = 11
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -76,10 +76,10 @@ android {
         kotlinCompilerExtensionVersion = "1.5.10"
     }
 
-    // Disable lint abort on error for debug builds only (to allow experimental APIs)
+    // Lint errors are release blockers; warnings remain visible for scheduled cleanup.
     lint {
-        abortOnError = false
-        checkReleaseBuilds = false
+        abortOnError = true
+        checkReleaseBuilds = true
     }
 }
 
@@ -87,6 +87,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.0")
     implementation("androidx.activity:activity-compose:1.9.0")
 
     val composeBom = platform("androidx.compose:compose-bom:2024.05.00")
@@ -133,6 +134,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
 }
 
 kapt {

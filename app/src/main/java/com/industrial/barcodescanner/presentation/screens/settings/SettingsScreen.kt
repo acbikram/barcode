@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +25,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.industrial.barcodescanner.R
 import com.industrial.barcodescanner.presentation.components.BottomNavigationBar
+import com.industrial.barcodescanner.presentation.components.GlassActionButton
+import com.industrial.barcodescanner.presentation.components.GlassActionTone
+import com.industrial.barcodescanner.presentation.components.GlassSectionCard
+import com.industrial.barcodescanner.presentation.components.GlassSelectableOption
 import com.industrial.barcodescanner.presentation.navigation.Screen
 import com.industrial.barcodescanner.presentation.theme.AppDimens
 import com.industrial.barcodescanner.presentation.theme.CyanAccent
@@ -339,19 +346,26 @@ fun SettingsScreen(
             // ── Data Management ─────────────────────────────────────────────
             item {
                 SettingsCard(title = stringResource(R.string.data_management)) {
-                    Button(
-                        onClick = { navController.navigate(Screen.BackupRestore.route) },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = SurfaceVariant, contentColor = CyanAccent),
-                        shape = MaterialTheme.shapes.small
-                    ) { Text(stringResource(R.string.backup_restore)) }
+                    GlassActionButton(
+                        label = stringResource(R.string.backup_restore),
+                        supportingText = "Create or restore a Barcode To CSV backup",
+                        tone = GlassActionTone.Neutral,
+                        onClick = { navController.navigate(Screen.BackupRestore.route) }
+                    )
                     Spacer(Modifier.height(8.dp))
-                    Button(
-                        onClick = { showClearDialog = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = ErrorRed.copy(alpha = 0.15f), contentColor = ErrorRed),
-                        shape = MaterialTheme.shapes.small
-                    ) { Text(stringResource(R.string.clear_all_records)) }
+                    GlassActionButton(
+                        label = "Recycle bin",
+                        supportingText = "Restore records deleted from history",
+                        tone = GlassActionTone.Neutral,
+                        onClick = { navController.navigate(Screen.RecycleBin.route) }
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    GlassActionButton(
+                        label = stringResource(R.string.clear_all_records),
+                        supportingText = "Move all active records to the recycle bin",
+                        tone = GlassActionTone.Destructive,
+                        onClick = { showClearDialog = true }
+                    )
                 }
             }
         }
@@ -370,18 +384,32 @@ fun SettingsScreen(
 
 @Composable
 private fun SettingsCard(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-        shape = MaterialTheme.shapes.medium,
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
+    var expanded by rememberSaveable(title) { mutableStateOf(false) }
+    GlassSectionCard(modifier = Modifier.fillMaxWidth(), selected = expanded) {
         Column(modifier = Modifier.padding(AppDimens.CardPadding)) {
-            Text(title, style = MaterialTheme.typography.titleMedium.copy(color = CyanAccent, fontWeight = FontWeight.Bold))
-            Spacer(Modifier.height(12.dp))
-            content()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleMedium.copy(color = CyanAccent, fontWeight = FontWeight.Bold))
+                    if (!expanded) {
+                        Text("Tap to expand", style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
+                    }
+                }
+                Icon(
+                    if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (expanded) "Collapse $title" else "Expand $title",
+                    tint = CyanAccent
+                )
+            }
+            if (expanded) {
+                Spacer(Modifier.height(12.dp))
+                content()
+            }
         }
     }
 }
@@ -399,29 +427,15 @@ private fun SwitchRow(title: String, subtitle: String, checked: Boolean, onCheck
 
 @Composable
 private fun AppearanceOptionRow(title: String, subtitle: String, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        RadioButton(
-            selected = selected,
-            onClick = onClick,
-            colors = RadioButtonDefaults.colors(selectedColor = CyanAccent, unselectedColor = SubtleGray)
-        )
-        Column(modifier = Modifier.padding(start = 4.dp)) {
-            Text(title, style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface))
-            Text(subtitle, style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
-        }
-    }
+    GlassSelectableOption(
+        label = title,
+        detail = subtitle,
+        selected = selected,
+        onClick = onClick
+    )
 }
 
 @Composable
 private fun LanguageOptionRow(label: String, selected: Boolean, onClick: () -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
-        RadioButton(selected = selected, onClick = onClick, colors = RadioButtonDefaults.colors(selectedColor = CyanAccent, unselectedColor = SubtleGray))
-        Text(label, style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface))
-    }
+    GlassSelectableOption(label = label, selected = selected, onClick = onClick)
 }
