@@ -19,10 +19,19 @@ class FirstLaunchViewModel @Inject constructor(
     private val _showLanguagePrompt = MutableStateFlow(false)
     val showLanguagePrompt: StateFlow<Boolean> = _showLanguagePrompt.asStateFlow()
 
+    private val _showThemePrompt = MutableStateFlow(false)
+    val showThemePrompt: StateFlow<Boolean> = _showThemePrompt.asStateFlow()
+
     init {
         viewModelScope.launch {
-            val alreadyShown = preferencesManager.languagePromptShownFlow.first()
-            _showLanguagePrompt.value = !alreadyShown
+            val languageShown = runCatching {
+                preferencesManager.languagePromptShownFlow.first()
+            }.getOrDefault(false)
+            val themeShown = runCatching {
+                preferencesManager.themePromptShownFlow.first()
+            }.getOrDefault(false)
+            _showLanguagePrompt.value = !languageShown
+            _showThemePrompt.value = languageShown && !themeShown
         }
     }
 
@@ -30,6 +39,15 @@ class FirstLaunchViewModel @Inject constructor(
         viewModelScope.launch {
             preferencesManager.setLanguagePromptShown()
             _showLanguagePrompt.value = false
+            _showThemePrompt.value = true
+        }
+    }
+
+    fun onThemePromptConfirmed(mode: String) {
+        viewModelScope.launch {
+            runCatching { preferencesManager.setThemeMode(mode) }
+            preferencesManager.setThemePromptShown()
+            _showThemePrompt.value = false
         }
     }
 }

@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import com.industrial.barcodescanner.presentation.components.FirstLaunchLanguageDialog
+import com.industrial.barcodescanner.presentation.components.FirstLaunchThemeDialog
 import com.industrial.barcodescanner.presentation.navigation.BarcodeToCsvNavHost
 import com.industrial.barcodescanner.presentation.theme.BarcodeToCsvTheme
 import com.industrial.barcodescanner.utils.PreferencesManager
@@ -56,6 +57,14 @@ class MainActivity : AppCompatActivity() {
                     if (showLanguagePrompt) {
                         FirstLaunchLanguageDialog(
                             onDismiss = { firstLaunchViewModel.onLanguagePromptDismissed() }
+                        )
+                    }
+
+                    val showThemePrompt by firstLaunchViewModel.showThemePrompt.collectAsState()
+                    if (!showLanguagePrompt && showThemePrompt) {
+                        FirstLaunchThemeDialog(
+                            initialMode = themeMode,
+                            onConfirm = { firstLaunchViewModel.onThemePromptConfirmed(it) }
                         )
                     }
                 }

@@ -199,6 +199,14 @@
     <string name="language_system_default">لغة النظام</string>
     <string name="language_english">English (الإنجليزية)</string>
     <string name="language_arabic">العربية</string>
+    <string name="appearance">المظهر</string>
+    <string name="theme_selection_description">اختر مظهر تطبيق باركود إلى CSV. يمكنك تغييره لاحقاً من الإعدادات.</string>
+    <string name="theme_dark">داكن</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_system">إعدادات النظام</string>
+    <string name="theme_dark_description">واجهة داكنة مريحة للمسح في الإضاءة المنخفضة.</string>
+    <string name="theme_light_description">واجهة مشرقة لرؤية واضحة في ضوء النهار.</string>
+    <string name="theme_system_description">اتبع إعداد المظهر الحالي لجهازك.</string>
     <string name="wifi_history_today_totals">اليوم: %1$d صفحة • %2$d فشلت</string>
     <string name="wifi_history_range_all">الكل</string>
     <string name="wifi_history_range_today">اليوم</string>

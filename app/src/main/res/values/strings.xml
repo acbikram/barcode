@@ -199,6 +199,14 @@
     <string name="language_system_default">System Default</string>
     <string name="language_english">English</string>
     <string name="language_arabic">العربية (Arabic)</string>
+    <string name="appearance">Appearance</string>
+    <string name="theme_selection_description">Choose how Barcode To CSV should look. You can change this later in Settings.</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_dark_description">A focused dark interface for scanning in low-light environments.</string>
+    <string name="theme_light_description">A bright interface for clear visibility in daylight.</string>
+    <string name="theme_system_description">Follow your device’s current appearance setting.</string>
     <string name="wifi_history_today_totals">Today: %1$d pages • %2$d failed</string>
     <string name="wifi_history_range_all">All</string>
     <string name="wifi_history_range_today">Today</string>

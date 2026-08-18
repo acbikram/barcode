@@ -21,6 +21,7 @@ class PreferencesManager @Inject constructor(@ApplicationContext private val con
     private val scanSoundKey = booleanPreferencesKey("scan_sound")
     private val vibrationKey = booleanPreferencesKey("vibration")
     private val languagePromptShownKey = booleanPreferencesKey("language_prompt_shown")
+    private val themePromptShownKey = booleanPreferencesKey("theme_prompt_shown")
     private val lastTagTypeKey = stringPreferencesKey("last_tag_type")
     private val lastUnitTypeKey = stringPreferencesKey("last_unit_type")
     private val wifiHostKey = stringPreferencesKey("wifi_host")
@@ -47,6 +48,11 @@ class PreferencesManager @Inject constructor(@ApplicationContext private val con
         prefs[languagePromptShownKey] ?: false
     }
 
+    /** True once the user has completed the first-launch appearance choice. */
+    val themePromptShownFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[themePromptShownKey] ?: false
+    }
+
     /** Prevents repeatedly prompting users who have already made a notification choice. */
     val notificationPermissionPromptShownFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[notificationPermissionPromptShownKey] ?: false
@@ -55,6 +61,12 @@ class PreferencesManager @Inject constructor(@ApplicationContext private val con
     suspend fun setLanguagePromptShown() {
         context.dataStore.edit { prefs ->
             prefs[languagePromptShownKey] = true
+        }
+    }
+
+    suspend fun setThemePromptShown() {
+        context.dataStore.edit { prefs ->
+            prefs[themePromptShownKey] = true
         }
     }
 
