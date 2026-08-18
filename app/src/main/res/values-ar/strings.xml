@@ -31,6 +31,7 @@
     <!-- الشاشة الرئيسية -->
     <string name="app_title_header">باركود إلى CSV</string>
     <string name="developed_by">تم التطوير بواسطة </string>
+    <string name="whatsapp_contact_bikram">تواصل مع Bikram Acharya عبر واتساب</string>
     <string name="dashboard">لوحة التحكم</string>
     <string name="total_records">إجمالي السجلات</string>
     <string name="unique_products">المنتجات الفريدة</string>

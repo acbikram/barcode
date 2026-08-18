@@ -31,6 +31,7 @@
     <!-- Home screen -->
     <string name="app_title_header">BARCODE TO CSV</string>
     <string name="developed_by">Developed by </string>
+    <string name="whatsapp_contact_bikram">Contact Bikram Acharya on WhatsApp</string>
     <string name="dashboard">Dashboard</string>
     <string name="total_records">Total Records</string>
     <string name="unique_products">Unique Products</string>
