@@ -68,7 +68,7 @@ jobs:
         tag_name: ${{ steps.version.outputs.tag }}
         name: "Barcode To CSV ${{ steps.version.outputs.tag }}"
         body: |
-          Barcode To CSV v${{ steps.version.outputs.name }} adds rolling recovery backups in Documents and clear add-or-replace duplicate controls, while retaining the verified Android 16 startup and 16 KB native-library safeguards.
+          Barcode To CSV v${{ steps.version.outputs.name }} adds Near Expiry-inspired first-launch appearance onboarding with persisted dark, light, and system choices, alongside rolling recovery backups and clear add-or-replace duplicate controls. The verified Android 16 startup and 16 KB native-library safeguards remain enabled.
 
           Built only after successful Android lint, unit tests, signed APK validation, migration validation, and 16 KB native-library compatibility validation from commit ${{ github.sha }}.
         files: app/build/outputs/apk/release/app-release.apk
