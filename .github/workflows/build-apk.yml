@@ -68,9 +68,9 @@ jobs:
         tag_name: ${{ steps.version.outputs.tag }}
         name: "Barcode To CSV ${{ steps.version.outputs.tag }}"
         body: |
-          Barcode To CSV v${{ steps.version.outputs.name }} includes Android 16 native-library compatibility fixes, the refreshed Near Expiry Manager-inspired visual system, adaptive appearance modes, responsive dashboard cards, and hardened build tooling.
+          Barcode To CSV v${{ steps.version.outputs.name }} fixes the Android 16 Compose lifecycle-owner startup crash and retains the 16 KB native-library compatibility safeguards, refreshed Near Expiry Manager-inspired visual system, adaptive appearance modes, and responsive dashboard cards.
 
-          Built only after successful Android lint, unit tests, signed APK validation, and 16 KB native-library compatibility validation from commit ${{ github.sha }}.
+          Built only after successful Android lint, unit tests, signed APK validation, migration validation, and 16 KB native-library compatibility validation from commit ${{ github.sha }}.
         files: app/build/outputs/apk/release/app-release.apk
         make_latest: true
         overwrite_files: true
