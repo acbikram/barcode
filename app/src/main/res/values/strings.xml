@@ -179,6 +179,8 @@
     <string name="edit_item">Edit Item</string>
     <string name="manual_mode_enter">Manual barcode entry</string>
     <string name="manual_mode_exit">Exit manual mode</string>
+    <string name="flash_on">Turn flashlight on</string>
+    <string name="flash_off">Turn flashlight off</string>
     <string name="failed_to_start_camera_format">Failed to start camera: %1$s</string>
 
     <!-- Scanner inactive overlay -->
@@ -187,19 +189,23 @@
 
     <!-- Settings screen -->
     <string name="scan_settings">Scan Settings</string>
+    <string name="scan_settings_collapsed_description">Customize barcode scan feedback</string>
     <string name="beep_on_scan">Beep on scan</string>
     <string name="beep_on_scan_subtitle">Plays a short beep when a barcode is detected</string>
     <string name="vibrate_on_scan">Vibrate on scan</string>
     <string name="vibrate_on_scan_subtitle">Vibrates when a barcode is detected</string>
     <string name="data_management">Data Management</string>
+    <string name="data_management_collapsed_description">Tap to manage backups and app data</string>
     <string name="clear_all_records">Clear All Records</string>
     <string name="clear_all_records_confirm">This action cannot be undone. Are you sure?</string>
     <string name="language">Language</string>
     <string name="language_description">Choose the app\'s display language.</string>
+    <string name="language_collapsed_description">Tap to choose the app language</string>
     <string name="language_system_default">System Default</string>
     <string name="language_english">English</string>
     <string name="language_arabic">العربية (Arabic)</string>
     <string name="appearance">Appearance</string>
+    <string name="appearance_description">Choose the app appearance</string>
     <string name="theme_selection_description">Choose how Barcode To CSV should look. You can change this later in Settings.</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_light">Light</string>
@@ -213,6 +219,7 @@
     <string name="theme_dark_settings_subtitle">High-contrast dark dashboard</string>
     <string name="theme_light_settings_subtitle">Clean, bright workspace</string>
     <string name="theme_system_settings_subtitle">Follow your device setting</string>
+    <string name="catalog_collapsed_description">Manage the barcode product catalog</string>
     <string name="importing">Importing…</string>
     <string name="import_catalog_file">Import file (CSV or .db)</string>
     <string name="backup_restore_supporting">Create or restore a Barcode To CSV backup</string>

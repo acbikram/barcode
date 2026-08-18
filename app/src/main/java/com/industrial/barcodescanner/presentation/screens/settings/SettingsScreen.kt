@@ -53,6 +53,8 @@ fun SettingsScreen(
     var currentLanguage by remember { mutableStateOf(LanguageManager.getCurrentLanguage()) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    // Near Expiry-style accordion state: opening one section always closes the rest.
+    var expandedSection by rememberSaveable { mutableStateOf<String?>(null) }
 
     val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) viewModel.importCatalogFromUri(uri)
@@ -86,7 +88,11 @@ fun SettingsScreen(
             // ── Appearance ──────────────────────────────────────────────────
             item {
                 SettingsCard(
+                    sectionId = "appearance",
+                    expandedSection = expandedSection,
+                    onExpandedSectionChange = { expandedSection = it },
                     title = stringResource(R.string.appearance),
+                    expandedSummary = stringResource(R.string.appearance_description),
                     collapsedSummary = stringResource(
                         R.string.theme_summary_format,
                         when (uiState.themeMode) {
@@ -96,28 +102,24 @@ fun SettingsScreen(
                         }
                     )
                 ) {
-                    Text(
-                        "Choose the interface appearance that is most comfortable for your environment.",
-                        style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
-                    )
                     Spacer(Modifier.height(12.dp))
                     AppearanceOptionRow(
                         title = stringResource(R.string.theme_dark),
                         subtitle = stringResource(R.string.theme_dark_settings_subtitle),
                         selected = uiState.themeMode == "dark",
-                        onClick = { viewModel.setThemeMode("dark") }
+                        onClick = { viewModel.setThemeMode("dark"); expandedSection = null }
                     )
                     AppearanceOptionRow(
                         title = stringResource(R.string.theme_light),
                         subtitle = stringResource(R.string.theme_light_settings_subtitle),
                         selected = uiState.themeMode == "light",
-                        onClick = { viewModel.setThemeMode("light") }
+                        onClick = { viewModel.setThemeMode("light"); expandedSection = null }
                     )
                     AppearanceOptionRow(
                         title = stringResource(R.string.theme_system),
                         subtitle = stringResource(R.string.theme_system_settings_subtitle),
                         selected = uiState.themeMode == "system",
-                        onClick = { viewModel.setThemeMode("system") }
+                        onClick = { viewModel.setThemeMode("system"); expandedSection = null }
                     )
                 }
             }
@@ -125,17 +127,13 @@ fun SettingsScreen(
             // ── Language ────────────────────────────────────────────────────
             item {
                 SettingsCard(
+                    sectionId = "language",
+                    expandedSection = expandedSection,
+                    onExpandedSectionChange = { expandedSection = it },
                     title = stringResource(R.string.language),
-                    collapsedSummary = stringResource(
-                        R.string.language_current_format,
-                        when (currentLanguage) {
-                            LanguageManager.AppLanguage.ENGLISH -> stringResource(R.string.language_english)
-                            LanguageManager.AppLanguage.ARABIC -> stringResource(R.string.language_arabic)
-                            else -> stringResource(R.string.language_system_default)
-                        }
-                    )
+                    expandedSummary = stringResource(R.string.language_description),
+                    collapsedSummary = stringResource(R.string.language_collapsed_description)
                 ) {
-                    Text(stringResource(R.string.language_description), style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
                     Spacer(Modifier.height(12.dp))
                     listOf(
                         LanguageManager.AppLanguage.SYSTEM_DEFAULT to stringResource(R.string.language_system_default),
@@ -145,6 +143,7 @@ fun SettingsScreen(
                         LanguageOptionRow(label = label, selected = currentLanguage == lang) {
                             currentLanguage = lang
                             LanguageManager.setLanguage(lang)
+                            expandedSection = null
                         }
                     }
                 }
@@ -153,8 +152,11 @@ fun SettingsScreen(
             // ── Scan Settings ───────────────────────────────────────────────
             item {
                 SettingsCard(
+                    sectionId = "scanSettings",
+                    expandedSection = expandedSection,
+                    onExpandedSectionChange = { expandedSection = it },
                     title = stringResource(R.string.scan_settings),
-                    collapsedSummary = stringResource(R.string.settings_tap_to_expand)
+                    collapsedSummary = stringResource(R.string.scan_settings_collapsed_description)
                 ) {
                     SwitchRow(
                         title = stringResource(R.string.beep_on_scan),
@@ -177,8 +179,11 @@ fun SettingsScreen(
             // ── Product Catalog ─────────────────────────────────────────────
             item {
                 SettingsCard(
+                    sectionId = "catalog",
+                    expandedSection = expandedSection,
+                    onExpandedSectionChange = { expandedSection = it },
                     title = stringResource(R.string.update_catalog),
-                    collapsedSummary = stringResource(R.string.settings_tap_to_expand)
+                    collapsedSummary = stringResource(R.string.catalog_collapsed_description)
                 ) {
                     // Catalog info
                     if (uiState.catalogCount > 0) {
@@ -276,6 +281,10 @@ fun SettingsScreen(
                 }
 
                 SettingsCard(
+                    sectionId = "updates",
+                    expandedSection = expandedSection,
+                    onExpandedSectionChange = { expandedSection = it },
+                    alwaysExpanded = true,
                     title = stringResource(R.string.update_app_title),
                     collapsedSummary = stringResource(R.string.settings_tap_to_expand)
                 ) {
@@ -375,28 +384,31 @@ fun SettingsScreen(
             // ── Data Management ─────────────────────────────────────────────
             item {
                 SettingsCard(
+                    sectionId = "dataManagement",
+                    expandedSection = expandedSection,
+                    onExpandedSectionChange = { expandedSection = it },
                     title = stringResource(R.string.data_management),
-                    collapsedSummary = stringResource(R.string.settings_tap_to_expand)
+                    collapsedSummary = stringResource(R.string.data_management_collapsed_description)
                 ) {
                     GlassActionButton(
                         label = stringResource(R.string.backup_restore),
                         supportingText = stringResource(R.string.backup_restore_supporting),
                         tone = GlassActionTone.Neutral,
-                        onClick = { navController.navigate(Screen.BackupRestore.route) }
+                        onClick = { expandedSection = null; navController.navigate(Screen.BackupRestore.route) }
                     )
                     Spacer(Modifier.height(8.dp))
                     GlassActionButton(
                         label = stringResource(R.string.recycle_bin),
                         supportingText = stringResource(R.string.recycle_bin_supporting),
                         tone = GlassActionTone.Neutral,
-                        onClick = { navController.navigate(Screen.RecycleBin.route) }
+                        onClick = { expandedSection = null; navController.navigate(Screen.RecycleBin.route) }
                     )
                     Spacer(Modifier.height(8.dp))
                     GlassActionButton(
                         label = stringResource(R.string.clear_all_records),
                         supportingText = stringResource(R.string.clear_all_records_supporting),
                         tone = GlassActionTone.Destructive,
-                        onClick = { showClearDialog = true }
+                        onClick = { expandedSection = null; showClearDialog = true }
                     )
                 }
             }
@@ -416,34 +428,46 @@ fun SettingsScreen(
 
 @Composable
 private fun SettingsCard(
+    sectionId: String,
+    expandedSection: String?,
+    onExpandedSectionChange: (String?) -> Unit,
     title: String,
+    alwaysExpanded: Boolean = false,
     collapsedSummary: String? = null,
+    expandedSummary: String? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    var expanded by rememberSaveable(title) { mutableStateOf(false) }
-    GlassSectionCard(modifier = Modifier.fillMaxWidth(), selected = expanded) {
+    val expanded = alwaysExpanded || expandedSection == sectionId
+    // Keep the card surface neutral while expanded; only the selected option is tinted.
+    GlassSectionCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(AppDimens.CardPadding)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { expanded = !expanded }
+                    .then(
+                        if (alwaysExpanded) Modifier
+                        else Modifier.clickable { onExpandedSectionChange(if (expanded) null else sectionId) }
+                    )
                     .padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(title, style = MaterialTheme.typography.titleMedium.copy(color = CyanAccent, fontWeight = FontWeight.Bold))
-                    if (!expanded) {
+                    val summary = if (expanded) expandedSummary else collapsedSummary
+                    if (summary != null) {
                         Text(
-                            collapsedSummary ?: stringResource(R.string.settings_tap_to_expand),
+                            summary,
                             style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
                         )
                     }
                 }
-                Icon(
-                    if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (expanded) "Collapse $title" else "Expand $title",
-                    tint = CyanAccent
-                )
+                if (!alwaysExpanded) {
+                    Icon(
+                        if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (expanded) "Collapse $title" else "Expand $title",
+                        tint = CyanAccent
+                    )
+                }
             }
             if (expanded) {
                 Spacer(Modifier.height(12.dp))

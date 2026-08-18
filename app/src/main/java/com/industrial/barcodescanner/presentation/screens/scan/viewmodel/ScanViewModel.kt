@@ -73,7 +73,10 @@ class ScanViewModel @Inject constructor(
         val showDeleteConfirmDialog: Boolean = false,
         val deleteItemId: Long = 0,
         // Manual barcode entry mode
-        val showManualMode: Boolean = false
+        val showManualMode: Boolean = false,
+        // Camera torch preference for the active scan session. The screen applies
+        // it only while the CameraX controller is bound to camera scan mode.
+        val torchEnabled: Boolean = false
     )
 
     private val _uiState = MutableStateFlow(ScanUiState())
@@ -125,6 +128,11 @@ class ScanViewModel @Inject constructor(
     fun restartScanner() {
         _uiState.update { it.copy(scannerInactive = false) }
         startInactivityTimer()
+    }
+
+    /** Toggles the CameraX torch for this scan session. */
+    fun toggleTorch() {
+        _uiState.update { it.copy(torchEnabled = !it.torchEnabled) }
     }
 
     // -- Manual barcode entry mode --------------------------------------------
