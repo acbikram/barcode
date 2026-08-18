@@ -139,6 +139,10 @@
     <string name="restore_database">استعادة قاعدة البيانات</string>
     <string name="processing">جاري المعالجة…</string>
     <string name="operation_successful">تمت العملية بنجاح</string>
+    <string name="auto_backup_now">إنشاء نسخة احتياطية للاسترداد</string>
+    <string name="auto_backup_now_subtitle">احفظ نسخة قابلة للاستعادة في المستندات؛ يتم الاحتفاظ بآخر ٧ نسخ يومية</string>
+    <string name="auto_backup_saved_format">تم حفظ نسخة الاسترداد: %1$s</string>
+    <string name="auto_backup_failed">تعذّر إنشاء نسخة الاسترداد الاحتياطية.</string>
 
     <!-- شاشة التفاصيل -->
     <string name="item_details">تفاصيل الصنف</string>
@@ -161,6 +165,8 @@
     <string name="new_copies">النسخ الجديدة: </string>
     <string name="final_copies">النسخ النهائية: </string>
     <string name="confirm_save_question">تأكيد الحفظ؟</string>
+    <string name="duplicate_add_copies">إضافة النسخ</string>
+    <string name="duplicate_replace_count">استبدال العدد</string>
 
     <!-- شاشة المسح -->
     <string name="camera_permission_required">إذن الكاميرا مطلوب</string>

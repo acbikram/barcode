@@ -88,6 +88,13 @@ fun BackupRestoreScreen(
                             onClick = { backupLauncher.launch("BarcodeToCsv_backup_${System.currentTimeMillis()}.json") }
                         )
                         GlassActionButton(
+                            label = stringResource(R.string.auto_backup_now),
+                            supportingText = stringResource(R.string.auto_backup_now_subtitle),
+                            tone = GlassActionTone.Neutral,
+                            enabled = !uiState.isLoading,
+                            onClick = viewModel::createRecoveryBackup
+                        )
+                        GlassActionButton(
                             label = stringResource(R.string.restore_database),
                             supportingText = "Replace active records; previous records remain recoverable",
                             tone = GlassActionTone.Warning,
@@ -162,10 +169,10 @@ fun BackupRestoreScreen(
     }
 
     if (uiState.success) {
-        val successMsg = uiState.catalogCount?.let {
+        val successMsg = uiState.successMessage ?: uiState.catalogCount?.let {
             stringResource(R.string.catalog_import_done, it)
         } ?: operationSuccessMsg
-        LaunchedEffect(Unit) {
+        LaunchedEffect(uiState.successMessage, uiState.catalogCount) {
             scope.launch {
                 snackbarHostState.showSnackbar(successMsg)
                 viewModel.resetSuccess()

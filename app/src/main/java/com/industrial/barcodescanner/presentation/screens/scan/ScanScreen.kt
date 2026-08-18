@@ -336,7 +336,8 @@ fun ScanScreen(
         DuplicateCopiesDialog(
             existingCopies = uiState.duplicateExistingCopies,
             newCopies = uiState.duplicateNewCopies,
-            onConfirm = { viewModel.mergeDuplicateItem() },
+            onAddCopies = { viewModel.mergeDuplicateItem() },
+            onReplaceCount = { viewModel.replaceDuplicateItem() },
             onDismiss = { viewModel.dismissDuplicateDialog() },
             productName = pendingDisplayName
         )

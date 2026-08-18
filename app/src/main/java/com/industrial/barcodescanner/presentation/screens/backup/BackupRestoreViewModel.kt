@@ -6,9 +6,11 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.industrial.barcodescanner.data.local.entity.ScannedItemEntity
+import com.industrial.barcodescanner.R
 import com.industrial.barcodescanner.data.local.entity.toEntity
 import com.industrial.barcodescanner.data.local.catalog.ProductCatalogOpenHelper
 import com.industrial.barcodescanner.domain.repository.ScannedItemRepository
+import com.industrial.barcodescanner.utils.AutoBackup
 import com.industrial.barcodescanner.utils.JsonBackup
 import com.industrial.barcodescanner.utils.WifiDiscovery
 import com.industrial.barcodescanner.utils.WifiSender
@@ -34,7 +36,8 @@ class BackupRestoreViewModel @Inject constructor(
         val isLoading: Boolean = false,
         val error: String? = null,
         val success: Boolean = false,
-        val catalogCount: Int? = null
+        val catalogCount: Int? = null,
+        val successMessage: String? = null
     )
 
     private val _uiState = MutableStateFlow(BackupUiState())
@@ -54,6 +57,30 @@ class BackupRestoreViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = false, success = true) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    /** Creates a portable recovery backup in Documents without opening a picker. */
+    fun createRecoveryBackup() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null, success = false, successMessage = null) }
+            try {
+                val name = withContext(Dispatchers.IO) { AutoBackup.run(context) }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        success = true,
+                        successMessage = context.getString(R.string.auto_backup_saved_format, name)
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: context.getString(R.string.auto_backup_failed)
+                    )
+                }
             }
         }
     }
@@ -129,6 +156,6 @@ class BackupRestoreViewModel @Inject constructor(
     }
 
     fun resetSuccess() {
-        _uiState.update { it.copy(success = false, catalogCount = null) }
+        _uiState.update { it.copy(success = false, catalogCount = null, successMessage = null) }
     }
 }

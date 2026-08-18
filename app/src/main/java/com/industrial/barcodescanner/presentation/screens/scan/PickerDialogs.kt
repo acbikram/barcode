@@ -225,13 +225,14 @@ fun CopiesPickerDialog(
 
 /**
  * Shown when a scan matches an existing row (same barcode + tag type + unit
- * type) — offers to merge by adding the new copies onto the existing count.
+ * type) — lets the operator add the new copies or replace the saved count.
  */
 @Composable
 fun DuplicateCopiesDialog(
     existingCopies: Int,
     newCopies: Int,
-    onConfirm: () -> Unit,
+    onAddCopies: () -> Unit,
+    onReplaceCount: () -> Unit,
     onDismiss: () -> Unit,
     productName: String? = null
 ) {
@@ -271,13 +272,18 @@ fun DuplicateCopiesDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(stringResource(R.string.confirm))
+            TextButton(onClick = onAddCopies) {
+                Text(stringResource(R.string.duplicate_add_copies))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+            Column(horizontalAlignment = Alignment.End) {
+                TextButton(onClick = onReplaceCount) {
+                    Text(stringResource(R.string.duplicate_replace_count))
+                }
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         }
     )

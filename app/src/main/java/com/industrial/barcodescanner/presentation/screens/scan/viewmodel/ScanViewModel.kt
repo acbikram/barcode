@@ -287,6 +287,24 @@ class ScanViewModel @Inject constructor(
         }
     }
 
+    /** Replaces the saved copy count with the newly selected value. */
+    fun replaceDuplicateItem() {
+        viewModelScope.launch {
+            val state = _uiState.value
+            val existing = repository.getItemById(state.duplicateItemId) ?: return@launch
+            val updated = existing.copy(
+                copies = state.duplicateNewCopies,
+                updatedAt = System.currentTimeMillis(),
+                itemCode = existing.itemCode ?: state.pendingItemCode,
+                productName = existing.productName ?: state.pendingProductName,
+                productNameArabic = existing.productNameArabic ?: state.pendingProductNameArabic
+            )
+            repository.updateItem(updated.toEntity())
+            resetPendingState()
+            startInactivityTimer()
+        }
+    }
+
     fun dismissDuplicateDialog() {
         resetPendingState()
         startInactivityTimer()

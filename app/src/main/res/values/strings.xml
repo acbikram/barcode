@@ -139,6 +139,10 @@
     <string name="restore_database">Restore Database</string>
     <string name="processing">Processing…</string>
     <string name="operation_successful">Operation successful</string>
+    <string name="auto_backup_now">Create recovery backup</string>
+    <string name="auto_backup_now_subtitle">Save a portable copy in Documents; the newest 7 daily backups are retained</string>
+    <string name="auto_backup_saved_format">Recovery backup saved: %1$s</string>
+    <string name="auto_backup_failed">Could not create the recovery backup.</string>
 
     <!-- Detail screen -->
     <string name="item_details">Item Details</string>
@@ -161,6 +165,8 @@
     <string name="new_copies">New Copies: </string>
     <string name="final_copies">Final Copies: </string>
     <string name="confirm_save_question">Confirm Save?</string>
+    <string name="duplicate_add_copies">Add copies</string>
+    <string name="duplicate_replace_count">Replace count</string>
 
     <!-- Scan screen -->
     <string name="camera_permission_required">Camera permission required</string>
