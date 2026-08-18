@@ -1,5 +1,7 @@
 package com.industrial.barcodescanner.presentation.screens.home
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -44,13 +46,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,6 +79,9 @@ import java.time.format.DateTimeFormatter
 
 const val FILTER_ALL = "ALL"
 
+private const val WHATSAPP_DEVELOPER_LINK =
+    "https://wa.me/9779860874001?text=Hi%20Bikram,%20I%20reached%20you%20through%20the%20Barcode%20To%20CSV%20application%20can%20you%20respond%20me?"
+
 @Composable
 fun HomeScreen(
     navController: NavController,
@@ -86,6 +90,7 @@ fun HomeScreen(
     // Explicitly use Compose UI's owner. This avoids the missing lifecycle
     // CompositionLocal that caused a fatal startup exception on Android 16.
     val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(lifecycleOwner = lifecycleOwner)
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -120,18 +125,45 @@ fun HomeScreen(
                         color = CyanAccent
                     )
                 )
-                Text(
-                    text = buildAnnotatedString {
-                        append(stringResource(R.string.developed_by))
-                        withStyle(SpanStyle(color = OrangeAccent, fontWeight = FontWeight.SemiBold)) {
-                            append("Bikram Acharya")
-                        }
-                    },
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontStyle = FontStyle.Italic,
-                        color = SubtleGray
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 2.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.developed_by),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontStyle = FontStyle.Italic,
+                            color = SubtleGray
+                        )
                     )
-                )
+                    Spacer(Modifier.width(8.dp))
+                    Row(
+                        modifier = Modifier.clickable {
+                            runCatching {
+                                context.startActivity(
+                                    Intent(Intent.ACTION_VIEW, Uri.parse(WHATSAPP_DEVELOPER_LINK))
+                                )
+                            }
+                        },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_whatsapp),
+                            contentDescription = stringResource(R.string.whatsapp_contact_bikram),
+                            tint = GreenAccent,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = "Bikram Acharya",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontStyle = FontStyle.Italic,
+                                fontWeight = FontWeight.SemiBold,
+                                color = OrangeAccent
+                            )
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
