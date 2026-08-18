@@ -13,9 +13,9 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.industrial.barcodescanner.R
@@ -43,7 +43,11 @@ fun BottomNavigationBar(navController: NavController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute   = backStackEntry?.destination?.route
 
-    NavigationBar(containerColor = Color(0xFF0D1117)) {
+    val selectedPill = CyanAccent.copy(alpha = 0.16f)
+    NavigationBar(
+        containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
+        tonalElevation = 8.dp
+    ) {
         items.forEach { (screen, labelRes, icon) ->
             // Strip query-param template so History with ?filter=... is still matched
             val baseRoute  = screen.route.substringBefore('?')
@@ -78,7 +82,7 @@ fun BottomNavigationBar(navController: NavController) {
                     selectedTextColor   = CyanAccent,
                     unselectedIconColor = SubtleGray,
                     unselectedTextColor = SubtleGray,
-                    indicatorColor      = CyanAccent.copy(alpha = 0.15f)
+                    indicatorColor      = selectedPill
                 )
             )
         }

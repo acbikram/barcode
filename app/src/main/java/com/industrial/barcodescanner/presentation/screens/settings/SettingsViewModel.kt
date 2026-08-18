@@ -50,7 +50,8 @@ class SettingsViewModel @Inject constructor(
         val updateVersionName: String = "",
         val updateApkUrl: String = "",          // stored so download doesn't need re-check
         val updateDownloadProgress: Int = 0,
-        val updateError: String = ""
+        val updateError: String = "",
+        val themeMode: String = "dark"
     )
 
     enum class WifiCatalogState { IDLE, DISCOVERING, DOWNLOADING, SUCCESS, ERROR }
@@ -65,6 +66,9 @@ class SettingsViewModel @Inject constructor(
         }
         viewModelScope.launch {
             preferencesManager.vibrationFlow.collect { v -> _uiState.update { it.copy(vibration = v) } }
+        }
+        viewModelScope.launch {
+            preferencesManager.themeModeFlow.collect { mode -> _uiState.update { it.copy(themeMode = mode) } }
         }
         refreshCatalogInfo()
     }
@@ -88,6 +92,10 @@ class SettingsViewModel @Inject constructor(
 
     fun toggleVibration(enabled: Boolean) {
         viewModelScope.launch { preferencesManager.setVibration(enabled) }
+    }
+
+    fun setThemeMode(mode: String) {
+        viewModelScope.launch { preferencesManager.setThemeMode(mode) }
     }
 
     fun clearAllRecords() {

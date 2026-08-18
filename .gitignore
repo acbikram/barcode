@@ -1,0 +1,21 @@
+# Android Studio and local machine configuration
+.local.properties
+local.properties
+.idea/
+*.iml
+
+# Gradle state and build artifacts
+.gradle/
+build/
+**/build/
+
+# Signing material
+*.jks
+*.keystore
+
+# Native build output
+.externalNativeBuild/
+.cxx/
+
+# Operating-system files
+.DS_Store

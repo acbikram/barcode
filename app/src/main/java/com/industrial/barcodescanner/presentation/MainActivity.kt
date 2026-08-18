@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -14,7 +15,9 @@ import androidx.core.view.WindowCompat
 import com.industrial.barcodescanner.presentation.components.FirstLaunchLanguageDialog
 import com.industrial.barcodescanner.presentation.navigation.BarcodeToCsvNavHost
 import com.industrial.barcodescanner.presentation.theme.BarcodeToCsvTheme
+import com.industrial.barcodescanner.utils.PreferencesManager
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Extends AppCompatActivity (not plain ComponentActivity) so that
@@ -28,13 +31,20 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
+    @Inject lateinit var preferencesManager: PreferencesManager
     private val firstLaunchViewModel: FirstLaunchViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            BarcodeToCsvTheme {
+            val themeMode by preferencesManager.themeModeFlow.collectAsState(initial = "dark")
+            val useDarkTheme = when (themeMode) {
+                "light" -> false
+                "system" -> isSystemInDarkTheme()
+                else -> true
+            }
+            BarcodeToCsvTheme(darkTheme = useDarkTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

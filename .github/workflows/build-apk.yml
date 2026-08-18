@@ -20,10 +20,8 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: 8.7
+    - name: Set up Gradle cache
+      uses: gradle/actions/setup-gradle@v4
 
     - name: Decode signing keystore
       env:
@@ -36,7 +34,12 @@ jobs:
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      run: gradle assembleRelease
+      run: ./gradlew clean assembleRelease --no-daemon --max-workers=2 --stacktrace
+
+    - name: Validate release APK
+      run: |
+        test -s app/build/outputs/apk/release/app-release.apk
+        ./gradlew testDebugUnitTest --no-daemon --max-workers=2 --stacktrace
 
     - name: Read version info
       id: version
@@ -58,7 +61,10 @@ jobs:
       with:
         tag_name: ${{ steps.version.outputs.tag }}
         name: "Barcode To CSV ${{ steps.version.outputs.tag }}"
-        body: "Auto-release from commit ${{ github.sha }}"
+        body: |
+          Barcode To CSV v${{ steps.version.outputs.name }} includes the refreshed Near Expiry Manager-inspired visual system, adaptive appearance modes, responsive dashboard cards, and hardened build tooling.
+
+          Built and validated from commit ${{ github.sha }}.
         files: app/build/outputs/apk/release/app-release.apk
         make_latest: true
         overwrite: true

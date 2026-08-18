@@ -28,6 +28,7 @@ class PreferencesManager @Inject constructor(@ApplicationContext private val con
     private val wifiHostKey = stringPreferencesKey("wifi_host")
     private val wifiPortKey = stringPreferencesKey("wifi_port")
     private val lastBatchCsvKey = stringPreferencesKey("last_batch_csv")
+    private val themeModeKey = stringPreferencesKey("theme_mode")
 
     val scanSoundFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[scanSoundKey] ?: true
@@ -35,6 +36,11 @@ class PreferencesManager @Inject constructor(@ApplicationContext private val con
 
     val vibrationFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[vibrationKey] ?: true
+    }
+
+    /** One of dark, light, or system. Defaults to the original dark appearance. */
+    val themeModeFlow: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[themeModeKey] ?: "dark"
     }
 
     /** True once the user has been shown the first-launch language picker. */
@@ -57,6 +63,13 @@ class PreferencesManager @Inject constructor(@ApplicationContext private val con
     suspend fun setVibration(enabled: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[vibrationKey] = enabled
+        }
+    }
+
+    suspend fun setThemeMode(mode: String) {
+        require(mode in setOf("dark", "light", "system")) { "Unsupported theme mode: $mode" }
+        context.dataStore.edit { prefs ->
+            prefs[themeModeKey] = mode
         }
     }
 

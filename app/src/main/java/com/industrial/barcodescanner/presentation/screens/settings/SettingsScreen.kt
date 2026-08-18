@@ -2,12 +2,12 @@ package com.industrial.barcodescanner.presentation.screens.settings
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
@@ -23,6 +23,7 @@ import androidx.navigation.NavController
 import com.industrial.barcodescanner.R
 import com.industrial.barcodescanner.presentation.components.BottomNavigationBar
 import com.industrial.barcodescanner.presentation.navigation.Screen
+import com.industrial.barcodescanner.presentation.theme.AppDimens
 import com.industrial.barcodescanner.presentation.theme.CyanAccent
 import com.industrial.barcodescanner.presentation.theme.ErrorRed
 import com.industrial.barcodescanner.presentation.theme.GreenAccent
@@ -71,10 +72,39 @@ fun SettingsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(vertical = 12.dp)
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = AppDimens.ScreenPadding),
+            verticalArrangement = Arrangement.spacedBy(AppDimens.ItemGap),
+            contentPadding = PaddingValues(vertical = AppDimens.CompactScreenPadding)
         ) {
+            // ── Appearance ──────────────────────────────────────────────────
+            item {
+                SettingsCard(title = "Appearance") {
+                    Text(
+                        "Choose the interface appearance that is most comfortable for your environment.",
+                        style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    AppearanceOptionRow(
+                        title = "Dark",
+                        subtitle = "High-contrast dark dashboard",
+                        selected = uiState.themeMode == "dark",
+                        onClick = { viewModel.setThemeMode("dark") }
+                    )
+                    AppearanceOptionRow(
+                        title = "Light",
+                        subtitle = "Clean, bright workspace",
+                        selected = uiState.themeMode == "light",
+                        onClick = { viewModel.setThemeMode("light") }
+                    )
+                    AppearanceOptionRow(
+                        title = "System default",
+                        subtitle = "Follow your device setting",
+                        selected = uiState.themeMode == "system",
+                        onClick = { viewModel.setThemeMode("system") }
+                    )
+                }
+            }
+
             // ── Language ────────────────────────────────────────────────────
             item {
                 SettingsCard(title = stringResource(R.string.language)) {
@@ -143,7 +173,7 @@ fun SettingsScreen(
                                 onClick = { viewModel.pullCatalogFromPc() },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = ButtonDefaults.buttonColors(containerColor = CyanAccent.copy(alpha = 0.15f), contentColor = CyanAccent),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = MaterialTheme.shapes.small
                             ) {
                                 Icon(Icons.Default.Wifi, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
@@ -172,11 +202,11 @@ fun SettingsScreen(
                             }
                         }
                         SettingsViewModel.WifiCatalogState.SUCCESS -> {
-                            Card(colors = CardDefaults.cardColors(containerColor = GreenAccent.copy(alpha = 0.12f)), shape = RoundedCornerShape(8.dp)) {
+                            Card(colors = CardDefaults.cardColors(containerColor = GreenAccent.copy(alpha = 0.12f)), shape = MaterialTheme.shapes.small) {
                                 Text(uiState.wifiCatalogStatus, style = MaterialTheme.typography.bodySmall.copy(color = GreenAccent, fontWeight = FontWeight.SemiBold), modifier = Modifier.fillMaxWidth().padding(12.dp))
                             }
                             Spacer(Modifier.height(6.dp))
-                            OutlinedButton(onClick = { viewModel.resetWifiCatalogState() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) {
+                            OutlinedButton(onClick = { viewModel.resetWifiCatalogState() }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small) {
                                 Text(stringResource(R.string.update_catalog_wifi))
                             }
                         }
@@ -196,7 +226,7 @@ fun SettingsScreen(
                         OutlinedButton(
                             onClick = { fileLauncher.launch("*/*") },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp)
+                            shape = MaterialTheme.shapes.small
                         ) { Text("Import file (CSV or .db)") }
                     }
                 }
@@ -224,7 +254,7 @@ fun SettingsScreen(
                             Button(
                                 onClick = { viewModel.checkForUpdate() },
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = MaterialTheme.shapes.small
                             ) { Text(stringResource(R.string.update_check_button)) }
                         }
 
@@ -238,7 +268,7 @@ fun SettingsScreen(
                         SettingsViewModel.UpdateState.UP_TO_DATE -> {
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = GreenAccent.copy(alpha = 0.12f)),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = MaterialTheme.shapes.small
                             ) {
                                 Text(
                                     stringResource(R.string.update_up_to_date),
@@ -247,7 +277,7 @@ fun SettingsScreen(
                                 )
                             }
                             Spacer(Modifier.height(6.dp))
-                            OutlinedButton(onClick = { viewModel.resetUpdateState() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) {
+                            OutlinedButton(onClick = { viewModel.resetUpdateState() }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small) {
                                 Text(stringResource(R.string.update_check_button))
                             }
                         }
@@ -255,7 +285,7 @@ fun SettingsScreen(
                         SettingsViewModel.UpdateState.AVAILABLE -> {
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = CyanAccent.copy(alpha = 0.12f)),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = MaterialTheme.shapes.small
                             ) {
                                 Text(
                                     stringResource(R.string.update_available_format, uiState.updateVersionName),
@@ -268,7 +298,7 @@ fun SettingsScreen(
                                 onClick = { viewModel.downloadAndInstallUpdate() },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = ButtonDefaults.buttonColors(containerColor = CyanAccent),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = MaterialTheme.shapes.small
                             ) { Text(stringResource(R.string.update_now_button), color = androidx.compose.ui.graphics.Color.Black, fontWeight = FontWeight.Bold) }
                         }
 
@@ -293,12 +323,12 @@ fun SettingsScreen(
                         SettingsViewModel.UpdateState.ERROR -> {
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = ErrorRed.copy(alpha = 0.12f)),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = MaterialTheme.shapes.small
                             ) {
                                 Text(uiState.updateError, style = MaterialTheme.typography.bodySmall.copy(color = ErrorRed), modifier = Modifier.fillMaxWidth().padding(12.dp))
                             }
                             Spacer(Modifier.height(6.dp))
-                            Button(onClick = { viewModel.checkForUpdate() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp)) {
+                            Button(onClick = { viewModel.checkForUpdate() }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small) {
                                 Text(stringResource(R.string.update_check_button))
                             }
                         }
@@ -313,14 +343,14 @@ fun SettingsScreen(
                         onClick = { navController.navigate(Screen.BackupRestore.route) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = SurfaceVariant, contentColor = CyanAccent),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = MaterialTheme.shapes.small
                     ) { Text(stringResource(R.string.backup_restore)) }
                     Spacer(Modifier.height(8.dp))
                     Button(
                         onClick = { showClearDialog = true },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = ErrorRed.copy(alpha = 0.15f), contentColor = ErrorRed),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = MaterialTheme.shapes.small
                     ) { Text(stringResource(R.string.clear_all_records)) }
                 }
             }
@@ -340,8 +370,15 @@ fun SettingsScreen(
 
 @Composable
 private fun SettingsCard(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Card(colors = CardDefaults.cardColors(containerColor = SurfaceDark), shape = RoundedCornerShape(12.dp)) {
-        Column(modifier = Modifier.padding(16.dp)) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium),
+        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(AppDimens.CardPadding)) {
             Text(title, style = MaterialTheme.typography.titleMedium.copy(color = CyanAccent, fontWeight = FontWeight.Bold))
             Spacer(Modifier.height(12.dp))
             content()
@@ -357,6 +394,27 @@ private fun SwitchRow(title: String, subtitle: String, checked: Boolean, onCheck
             Text(subtitle, style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange, colors = SwitchDefaults.colors(checkedThumbColor = GreenAccent, checkedTrackColor = GreenAccent.copy(alpha = 0.4f)))
+    }
+}
+
+@Composable
+private fun AppearanceOptionRow(title: String, subtitle: String, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = onClick,
+            colors = RadioButtonDefaults.colors(selectedColor = CyanAccent, unselectedColor = SubtleGray)
+        )
+        Column(modifier = Modifier.padding(start = 4.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface))
+            Text(subtitle, style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
+        }
     }
 }
 
