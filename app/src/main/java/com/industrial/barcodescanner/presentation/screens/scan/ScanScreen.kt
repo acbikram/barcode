@@ -160,6 +160,7 @@ fun ScanScreen(
         floatingActionButton = {
             if (showManualButton) {
                 Column(
+                    modifier = Modifier.imePadding(),
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {

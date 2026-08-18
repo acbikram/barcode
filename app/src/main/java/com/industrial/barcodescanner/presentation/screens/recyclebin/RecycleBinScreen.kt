@@ -33,12 +33,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.industrial.barcodescanner.R
 import com.industrial.barcodescanner.domain.model.ScannedItem
 import com.industrial.barcodescanner.presentation.components.BottomNavigationBar
 import com.industrial.barcodescanner.presentation.components.GlassActionButton
@@ -62,10 +64,10 @@ fun RecycleBinScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Recycle Bin", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.recycle_bin), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -84,10 +86,10 @@ fun RecycleBinScreen(
             item {
                 GlassSectionCard {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Recover deleted records", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.recover_deleted_records), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "Deleted scans stay here until you permanently remove them. Restored records return to History, Export, and the dashboard.",
+                            stringResource(R.string.recycle_bin_description),
                             style = MaterialTheme.typography.bodySmall,
                             color = SubtleGray
                         )
@@ -101,11 +103,11 @@ fun RecycleBinScreen(
                         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(onClick = viewModel::toggleSelectAll) {
-                                    Icon(Icons.Default.SelectAll, contentDescription = "Select all")
+                                    Icon(Icons.Default.SelectAll, contentDescription = stringResource(R.string.select_all))
                                 }
                                 Text(
-                                    if (uiState.selectionCount == 0) "${uiState.items.size} deleted record(s)"
-                                    else "${uiState.selectionCount} selected",
+                                    if (uiState.selectionCount == 0) stringResource(R.string.deleted_records_count, uiState.items.size)
+                                    else stringResource(R.string.selected_count, uiState.selectionCount),
                                     modifier = Modifier.weight(1f),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold
@@ -113,23 +115,23 @@ fun RecycleBinScreen(
                             }
                             if (uiState.selectionCount > 0) {
                                 GlassActionButton(
-                                    label = "Restore selected",
-                                    supportingText = "Return selected records to active history",
+                                    label = stringResource(R.string.restore_selected),
+                                    supportingText = stringResource(R.string.restore_selected_supporting),
                                     icon = Icons.Default.RestoreFromTrash,
                                     tone = GlassActionTone.Success,
                                     onClick = viewModel::restoreSelected
                                 )
                                 GlassActionButton(
-                                    label = "Delete selected permanently",
-                                    supportingText = "This action cannot be undone",
+                                    label = stringResource(R.string.delete_selected_permanently),
+                                    supportingText = stringResource(R.string.delete_permanently_irreversible),
                                     icon = Icons.Default.DeleteForever,
                                     tone = GlassActionTone.Destructive,
                                     onClick = viewModel::permanentlyDeleteSelected
                                 )
                             } else {
                                 GlassActionButton(
-                                    label = "Empty recycle bin",
-                                    supportingText = "Permanently remove all deleted records",
+                                    label = stringResource(R.string.empty_recycle_bin),
+                                    supportingText = stringResource(R.string.empty_recycle_bin_supporting),
                                     icon = Icons.Default.DeleteForever,
                                     tone = GlassActionTone.Destructive,
                                     onClick = viewModel::requestEmpty
@@ -156,9 +158,9 @@ fun RecycleBinScreen(
                                 tint = SubtleGray
                             )
                             Spacer(Modifier.height(12.dp))
-                            Text("Recycle bin is empty", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.recycle_bin_empty), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(4.dp))
-                            Text("Deleted barcode records can be restored here.", style = MaterialTheme.typography.bodySmall, color = SubtleGray)
+                            Text(stringResource(R.string.recycle_bin_empty_description), style = MaterialTheme.typography.bodySmall, color = SubtleGray)
                         }
                     }
                 }
@@ -179,18 +181,18 @@ fun RecycleBinScreen(
     if (uiState.showEmptyConfirmation) {
         AlertDialog(
             onDismissRequest = viewModel::dismissEmptyConfirmation,
-            title = { Text("Empty recycle bin?") },
-            text = { Text("All deleted barcode records will be permanently removed. This cannot be undone.") },
+            title = { Text(stringResource(R.string.empty_recycle_bin_question)) },
+            text = { Text(stringResource(R.string.empty_recycle_bin_confirmation)) },
             confirmButton = {
                 GlassActionButton(
-                    label = "Empty permanently",
+                    label = stringResource(R.string.empty_permanently),
                     tone = GlassActionTone.Destructive,
                     onClick = viewModel::confirmEmpty
                 )
             },
             dismissButton = {
                 GlassActionButton(
-                    label = "Cancel",
+                    label = stringResource(R.string.cancel),
                     tone = GlassActionTone.Neutral,
                     onClick = viewModel::dismissEmptyConfirmation
                 )
@@ -234,10 +236,10 @@ private fun RecycleBinItemRow(
                 }
             }
             IconButton(onClick = onRestore) {
-                Icon(Icons.Default.RestoreFromTrash, contentDescription = "Restore", tint = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Default.RestoreFromTrash, contentDescription = stringResource(R.string.restore), tint = MaterialTheme.colorScheme.primary)
             }
             IconButton(onClick = onDeleteForever) {
-                Icon(Icons.Default.DeleteForever, contentDescription = "Delete permanently", tint = ErrorRed)
+                Icon(Icons.Default.DeleteForever, contentDescription = stringResource(R.string.delete_permanently), tint = ErrorRed)
             }
         }
     }

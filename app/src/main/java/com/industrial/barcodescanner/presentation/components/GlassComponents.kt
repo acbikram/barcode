@@ -64,6 +64,17 @@ private fun glassSurfaceColor(selected: Boolean, accent: Color): Color {
 }
 
 @Composable
+private fun glassOptionSurfaceColor(emphasized: Boolean, accent: Color): Color {
+    val background = MaterialTheme.colorScheme.background
+    val base = if (isLightAppearance()) Color(0xFFE6F3F8) else Color(0xFF132632)
+    return if (emphasized) {
+        accent.copy(alpha = if (isLightAppearance()) 0.14f else 0.20f).compositeOver(base)
+    } else {
+        base.copy(alpha = if (isLightAppearance()) 0.50f else 0.34f).compositeOver(background)
+    }
+}
+
+@Composable
 private fun glassOutline(selected: Boolean, accent: Color): Color = when {
     selected -> accent.copy(alpha = if (isLightAppearance()) 0.90f else 0.96f)
     isLightAppearance() -> accent.copy(alpha = 0.34f)
@@ -132,7 +143,7 @@ fun GlassSelectableOption(
                 role = Role.RadioButton,
                 onClick = onClick
             ),
-        color = glassSurfaceColor(emphasized, accent),
+        color = glassOptionSurfaceColor(emphasized, accent),
         contentColor = MaterialTheme.colorScheme.onSurface,
         shadowElevation = elevation,
         tonalElevation = 0.dp,

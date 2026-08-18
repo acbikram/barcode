@@ -85,27 +85,37 @@ fun SettingsScreen(
         ) {
             // ── Appearance ──────────────────────────────────────────────────
             item {
-                SettingsCard(title = "Appearance") {
+                SettingsCard(
+                    title = stringResource(R.string.appearance),
+                    collapsedSummary = stringResource(
+                        R.string.theme_summary_format,
+                        when (uiState.themeMode) {
+                            "light" -> stringResource(R.string.theme_light)
+                            "system" -> stringResource(R.string.theme_system)
+                            else -> stringResource(R.string.theme_dark)
+                        }
+                    )
+                ) {
                     Text(
                         "Choose the interface appearance that is most comfortable for your environment.",
                         style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
                     )
                     Spacer(Modifier.height(12.dp))
                     AppearanceOptionRow(
-                        title = "Dark",
-                        subtitle = "High-contrast dark dashboard",
+                        title = stringResource(R.string.theme_dark),
+                        subtitle = stringResource(R.string.theme_dark_settings_subtitle),
                         selected = uiState.themeMode == "dark",
                         onClick = { viewModel.setThemeMode("dark") }
                     )
                     AppearanceOptionRow(
-                        title = "Light",
-                        subtitle = "Clean, bright workspace",
+                        title = stringResource(R.string.theme_light),
+                        subtitle = stringResource(R.string.theme_light_settings_subtitle),
                         selected = uiState.themeMode == "light",
                         onClick = { viewModel.setThemeMode("light") }
                     )
                     AppearanceOptionRow(
-                        title = "System default",
-                        subtitle = "Follow your device setting",
+                        title = stringResource(R.string.theme_system),
+                        subtitle = stringResource(R.string.theme_system_settings_subtitle),
                         selected = uiState.themeMode == "system",
                         onClick = { viewModel.setThemeMode("system") }
                     )
@@ -114,7 +124,17 @@ fun SettingsScreen(
 
             // ── Language ────────────────────────────────────────────────────
             item {
-                SettingsCard(title = stringResource(R.string.language)) {
+                SettingsCard(
+                    title = stringResource(R.string.language),
+                    collapsedSummary = stringResource(
+                        R.string.language_current_format,
+                        when (currentLanguage) {
+                            LanguageManager.AppLanguage.ENGLISH -> stringResource(R.string.language_english)
+                            LanguageManager.AppLanguage.ARABIC -> stringResource(R.string.language_arabic)
+                            else -> stringResource(R.string.language_system_default)
+                        }
+                    )
+                ) {
                     Text(stringResource(R.string.language_description), style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
                     Spacer(Modifier.height(12.dp))
                     listOf(
@@ -132,7 +152,10 @@ fun SettingsScreen(
 
             // ── Scan Settings ───────────────────────────────────────────────
             item {
-                SettingsCard(title = stringResource(R.string.scan_settings)) {
+                SettingsCard(
+                    title = stringResource(R.string.scan_settings),
+                    collapsedSummary = stringResource(R.string.settings_tap_to_expand)
+                ) {
                     SwitchRow(
                         title = stringResource(R.string.beep_on_scan),
                         subtitle = stringResource(R.string.beep_on_scan_subtitle),
@@ -153,7 +176,10 @@ fun SettingsScreen(
 
             // ── Product Catalog ─────────────────────────────────────────────
             item {
-                SettingsCard(title = stringResource(R.string.update_catalog)) {
+                SettingsCard(
+                    title = stringResource(R.string.update_catalog),
+                    collapsedSummary = stringResource(R.string.settings_tap_to_expand)
+                ) {
                     // Catalog info
                     if (uiState.catalogCount > 0) {
                         Text(
@@ -227,14 +253,14 @@ fun SettingsScreen(
                     if (uiState.catalogImporting) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = CyanAccent)
-                            Text("Importing…", style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
+                            Text(stringResource(R.string.importing), style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
                         }
                     } else {
                         OutlinedButton(
                             onClick = { fileLauncher.launch("*/*") },
                             modifier = Modifier.fillMaxWidth(),
                             shape = MaterialTheme.shapes.small
-                        ) { Text("Import file (CSV or .db)") }
+                        ) { Text(stringResource(R.string.import_catalog_file)) }
                     }
                 }
             }
@@ -249,7 +275,10 @@ fun SettingsScreen(
                     } catch (_: Exception) { "Unknown" }
                 }
 
-                SettingsCard(title = stringResource(R.string.update_app_title)) {
+                SettingsCard(
+                    title = stringResource(R.string.update_app_title),
+                    collapsedSummary = stringResource(R.string.settings_tap_to_expand)
+                ) {
                     Text(
                         stringResource(R.string.update_current_version_format, currentVersion),
                         style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
@@ -345,24 +374,27 @@ fun SettingsScreen(
 
             // ── Data Management ─────────────────────────────────────────────
             item {
-                SettingsCard(title = stringResource(R.string.data_management)) {
+                SettingsCard(
+                    title = stringResource(R.string.data_management),
+                    collapsedSummary = stringResource(R.string.settings_tap_to_expand)
+                ) {
                     GlassActionButton(
                         label = stringResource(R.string.backup_restore),
-                        supportingText = "Create or restore a Barcode To CSV backup",
+                        supportingText = stringResource(R.string.backup_restore_supporting),
                         tone = GlassActionTone.Neutral,
                         onClick = { navController.navigate(Screen.BackupRestore.route) }
                     )
                     Spacer(Modifier.height(8.dp))
                     GlassActionButton(
-                        label = "Recycle bin",
-                        supportingText = "Restore records deleted from history",
+                        label = stringResource(R.string.recycle_bin),
+                        supportingText = stringResource(R.string.recycle_bin_supporting),
                         tone = GlassActionTone.Neutral,
                         onClick = { navController.navigate(Screen.RecycleBin.route) }
                     )
                     Spacer(Modifier.height(8.dp))
                     GlassActionButton(
                         label = stringResource(R.string.clear_all_records),
-                        supportingText = "Move all active records to the recycle bin",
+                        supportingText = stringResource(R.string.clear_all_records_supporting),
                         tone = GlassActionTone.Destructive,
                         onClick = { showClearDialog = true }
                     )
@@ -383,7 +415,11 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SettingsCard(title: String, content: @Composable ColumnScope.() -> Unit) {
+private fun SettingsCard(
+    title: String,
+    collapsedSummary: String? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
     var expanded by rememberSaveable(title) { mutableStateOf(false) }
     GlassSectionCard(modifier = Modifier.fillMaxWidth(), selected = expanded) {
         Column(modifier = Modifier.padding(AppDimens.CardPadding)) {
@@ -397,7 +433,10 @@ private fun SettingsCard(title: String, content: @Composable ColumnScope.() -> U
                 Column(modifier = Modifier.weight(1f)) {
                     Text(title, style = MaterialTheme.typography.titleMedium.copy(color = CyanAccent, fontWeight = FontWeight.Bold))
                     if (!expanded) {
-                        Text("Tap to expand", style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray))
+                        Text(
+                            collapsedSummary ?: stringResource(R.string.settings_tap_to_expand),
+                            style = MaterialTheme.typography.bodySmall.copy(color = SubtleGray)
+                        )
                     }
                 }
                 Icon(
