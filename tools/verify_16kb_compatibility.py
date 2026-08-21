@@ -87,8 +87,8 @@ def verify(apk_path: Path) -> list[str]:
                     f"{info.filename}: PT_LOAD alignments {load_alignments} contain a value below 16384"
                 )
 
-    if not arm64_libraries:
-        failures.append("APK contains no arm64-v8a shared libraries to validate")
+    # A 32-bit-only split has no arm64 libraries and therefore no 16 KB page-size
+    # compatibility surface to inspect. Arm64-containing APKs remain strictly checked.
     return failures
 
 
@@ -108,7 +108,7 @@ def main() -> int:
             print(f"- {failure}", file=sys.stderr)
         return 1
 
-    print("16 KB compatibility check passed: all arm64 native libraries have 16 KB ZIP and ELF alignment.")
+    print("16 KB compatibility check passed: all present arm64 native libraries have 16 KB ZIP and ELF alignment.")
     return 0
 
 

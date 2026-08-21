@@ -41,11 +41,16 @@ jobs:
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: ./gradlew clean assembleRelease --no-daemon --max-workers=1 --stacktrace -Dorg.gradle.jvmargs="-Xmx2048m -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8"
 
-    - name: Validate release APK
+    - name: Validate release APKs
       run: |
-        APK=app/build/outputs/apk/release/app-release.apk
-        test -s "$APK"
-        python3 tools/verify_16kb_compatibility.py "$APK"
+        APKS=(
+          app/build/outputs/apk/release/app-armeabi-v7a-release.apk
+          app/build/outputs/apk/release/app-arm64-v8a-release.apk
+        )
+        for APK in "${APKS[@]}"; do
+          test -s "$APK"
+          python3 tools/verify_16kb_compatibility.py "$APK"
+        done
 
     - name: Read version info
       id: version
@@ -56,11 +61,13 @@ jobs:
         echo "name=$NAME" >> $GITHUB_OUTPUT
         echo "tag=v${NAME}+${CODE}" >> $GITHUB_OUTPUT
 
-    - name: Upload APK artifact
+    - name: Upload APK artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: app-release-apk
-        path: app/build/outputs/apk/release/app-release.apk
+        name: app-release-apks
+        path: |
+          app/build/outputs/apk/release/app-armeabi-v7a-release.apk
+          app/build/outputs/apk/release/app-arm64-v8a-release.apk
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
@@ -70,8 +77,12 @@ jobs:
         body: |
           Barcode To CSV v${{ steps.version.outputs.name }} adds Near Expiry-inspired first-launch appearance onboarding with persisted dark, light, and system choices, alongside rolling recovery backups and clear add-or-replace duplicate controls. The verified Android 16 startup and 16 KB native-library safeguards remain enabled.
 
+          Choose the APK matching your phone: arm64-v8a for nearly all modern Android phones, or armeabi-v7a for older 32-bit devices. Each APK is smaller because it carries only its own native scanner libraries.
+
           Built only after successful Android lint, unit tests, signed APK validation, migration validation, and 16 KB native-library compatibility validation from commit ${{ github.sha }}.
-        files: app/build/outputs/apk/release/app-release.apk
+        files: |
+          app/build/outputs/apk/release/app-armeabi-v7a-release.apk
+          app/build/outputs/apk/release/app-arm64-v8a-release.apk
         make_latest: true
         overwrite_files: true
       env:

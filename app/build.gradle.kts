@@ -19,12 +19,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Real phones are ARM. Dropping x86/x86_64 removes the unused copies of
-        // the scanner's native libraries and noticeably shrinks the APK, while
-        // keeping a single universal APK for your download-one-file workflow.
-        ndk {
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
-        }
+        // The app ships English and Arabic; remove unused transitive-library translations.
+        resourceConfigurations += listOf("en", "ar")
     }
 
     val keystorePath = System.getenv("KEYSTORE_FILE")
@@ -41,11 +37,26 @@ android {
         }
     }
 
+    // Publish one optimized APK per supported ARM ABI. This avoids shipping the
+    // other architecture's ML Kit native libraries to each device.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a")
+            // The universal debug artifact preserves x86_64 support for hosted
+            // emulator tests; release publishing attaches only the ARM splits.
+            isUniversalApk = true
+        }
+    }
+
     buildTypes {
         release {
             // R8 enabled: removes dead code and debug info (~30% APK size reduction).
             // The rules below keep all third-party libraries that use reflection.
             isMinifyEnabled = true
+            // Remove resources made unreachable by R8, including stale bundled assets.
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android.txt"),
                 "proguard-rules.pro"
