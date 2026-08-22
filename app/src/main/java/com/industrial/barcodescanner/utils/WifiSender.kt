@@ -5,7 +5,9 @@ import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.Closeable
+import java.io.DataOutputStream
 import java.io.IOException
+import java.io.OutputStream
 import java.io.InputStreamReader
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -42,18 +44,60 @@ object WifiSender {
 
     fun csvBytesFromText(text: String): ByteArray = text.toByteArray(Charsets.UTF_8)
 
+    /** Legacy PTAGCSV1 request bytes, deliberately unchanged for unpaired PCs. */
+    fun legacyCsvRequestFrame(payload: ByteArray): ByteArray {
+        require(payload.size <= MAX_CSV_PAYLOAD_BYTES) {
+            "Export is too large for Wi-Fi transfer. Split the selection and try again."
+        }
+        return ByteArrayOutputStream().use { bytes ->
+            DataOutputStream(bytes).use { output ->
+                output.write(MAGIC)
+                output.writeInt(payload.size)
+                output.write(payload)
+                output.flush()
+            }
+            bytes.toByteArray()
+        }
+    }
+
+    /** Authenticated CSV request framing: PTAGAUTH + token + unchanged legacy frame. */
+    fun authenticatedCsvRequestFrame(deviceToken: String, payload: ByteArray): ByteArray =
+        PriceTagPairingProtocol.authenticatedPrefix(deviceToken) + legacyCsvRequestFrame(payload)
+
+    fun legacyPingRequestFrame(): ByteArray = PING.copyOf()
+
+    fun authenticatedPingRequestFrame(deviceToken: String): ByteArray =
+        PriceTagPairingProtocol.authenticatedPrefix(deviceToken) + legacyPingRequestFrame()
+
+    private fun writeAuthPreamble(output: OutputStream, deviceToken: String?) {
+        if (deviceToken.isNullOrBlank()) return
+        DataOutputStream(output).apply {
+            write(PriceTagPairingProtocol.authenticatedPrefix(deviceToken))
+            flush()
+        }
+    }
+
     /**
      * Pull the catalog .db from the PC (the reverse of sendCsv). Sends the
      * GET_DB request, then reads a 4-byte big-endian length followed by that
      * many raw bytes, streaming them into [sink]. Returns the number of bytes
      * received (0 means the PC had no catalog ready).
      */
-    fun pullCatalog(host: String, port: Int, sink: java.io.OutputStream): Long {
+    fun pullCatalog(
+        host: String,
+        port: Int,
+        sink: java.io.OutputStream,
+        deviceToken: String? = null
+    ): Long {
         Socket().use { s ->
             s.tcpNoDelay = true
             s.connect(InetSocketAddress(host, port), CONNECT_TIMEOUT_MS)
             s.soTimeout = DB_READ_TIMEOUT_MS
-            s.getOutputStream().apply { write(GET_DB); flush() }
+            s.getOutputStream().apply {
+                writeAuthPreamble(this, deviceToken)
+                write(GET_DB)
+                flush()
+            }
             val ins = s.getInputStream()
             val lenBuf = readN(ins, 4) ?: throw IOException("No reply from PC")
             val n = ((lenBuf[0].toInt() and 0xFF) shl 24) or
@@ -89,11 +133,15 @@ object WifiSender {
     }
 
     /** Connection test — returns the PC's name, or throws on failure. */
-    fun ping(host: String, port: Int): String {
+    fun ping(host: String, port: Int, deviceToken: String? = null): String {
         Socket().use { s ->
             s.connect(InetSocketAddress(host, port), 5_000)
             s.soTimeout = 5_000
-            s.getOutputStream().apply { write(PING); flush() }
+            s.getOutputStream().apply {
+                if (deviceToken.isNullOrBlank()) write(legacyPingRequestFrame())
+                else write(authenticatedPingRequestFrame(deviceToken))
+                flush()
+            }
             val line = BufferedReader(InputStreamReader(s.getInputStream(), Charsets.UTF_8)).readLine()
                 ?: throw IOException("No reply from PC")
             val o = JSONObject(line)
@@ -103,7 +151,7 @@ object WifiSender {
     }
 
     /** One TCP conversation for sending a job. */
-    class Session(host: String, port: Int) : Closeable {
+    class Session(host: String, port: Int, private val deviceToken: String? = null) : Closeable {
         private val socket = Socket()
         private val reader: BufferedReader
 
@@ -119,17 +167,8 @@ object WifiSender {
                 "Export is too large for Wi-Fi transfer. Split the selection and try again."
             }
             val out = socket.getOutputStream()
-            out.write(MAGIC)
-            val n = payload.size
-            out.write(
-                byteArrayOf(
-                    (n ushr 24 and 0xFF).toByte(),
-                    (n ushr 16 and 0xFF).toByte(),
-                    (n ushr 8 and 0xFF).toByte(),
-                    (n and 0xFF).toByte()
-                )
-            )
-            out.write(payload)
+            writeAuthPreamble(out, deviceToken)
+            out.write(legacyCsvRequestFrame(payload))
             out.flush()
         }
 
@@ -147,6 +186,29 @@ object WifiSender {
 
         override fun close() {
             try { socket.close() } catch (_: Exception) {}
+        }
+    }
+}
+
+/** TCP pairing client. It never logs one-time codes, tokens, or raw frames. */
+object WifiPriceTagPairingClient : PriceTagPairingClient {
+    private const val CONNECT_TIMEOUT_MS = 8_000
+    private const val READ_TIMEOUT_MS = 10_000
+
+    override fun pair(
+        invitation: PriceTagPairingInvitation,
+        installationId: String
+    ): PairedPriceTagPc {
+        return Socket().use { socket ->
+            socket.tcpNoDelay = true
+            socket.connect(InetSocketAddress(invitation.host, invitation.port), CONNECT_TIMEOUT_MS)
+            socket.soTimeout = READ_TIMEOUT_MS
+            val output = DataOutputStream(socket.getOutputStream())
+            output.write(PriceTagPairingProtocol.pairRequestFrame(invitation.code, installationId))
+            output.flush()
+            val line = BufferedReader(InputStreamReader(socket.getInputStream(), Charsets.UTF_8)).readLine()
+                ?: throw IOException("Pairing response unavailable")
+            PriceTagPairingProtocol.parsePairedResponse(line, invitation)
         }
     }
 }

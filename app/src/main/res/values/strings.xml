@@ -271,4 +271,28 @@
     <string name="update_available_format">Update available: v%1$s</string>
     <string name="update_now_button">Update Now</string>
     <string name="update_downloading_format">Downloading… %1$d%%</string>
+<!-- Price Tag PC pairing -->
+<string name="pair_price_tag_pc">Pair with Price Tag PC</string>
+<string name="pair_price_tag_pc_supporting">Scan the one-time QR code shown by the Price Tag PC</string>
+<string name="not_paired">Not paired</string>
+<string name="pair_not_paired_hint">Scan the one-time QR code displayed by the Price Tag PC to create a secure connection.</string>
+<string name="pair_scan_hint">Point the camera at the Price Tag PC pairing QR code.</string>
+<string name="pair_camera_permission_hint">Camera access is needed only to scan the Price Tag PC pairing QR code.</string>
+<string name="pairing">Pairing</string>
+<string name="pairing_waiting">Securely connecting to the Price Tag PC…</string>
+<string name="paired_with_format">Paired with %1$s</string>
+<string name="testing">Testing</string>
+<string name="testing_waiting">Testing the secure connection…</string>
+<string name="test_connection">Test Connection</string>
+<string name="forget_this_pc">Forget this PC</string>
+<string name="confirm_pc_title">Confirm Price Tag PC</string>
+<string name="confirm_pc_message">Confirm this PC before creating a secure connection.</string>
+<string name="connection_failed">Connection failed</string>
+<string name="qr_scan_ready">QR scan ready</string>
+<string name="uploading_csv">Uploading CSV</string>
+<string name="pair_qr_invalid_or_expired">The QR code is invalid or has expired. Scan a new code from the Price Tag PC.</string>
+<string name="pair_qr_expired">The QR code has expired. Scan a new code from the Price Tag PC.</string>
+<string name="pair_failed">Pairing could not be completed. Check the Price Tag PC and scan a new QR code.</string>
+<string name="pair_connection_verified">Connection verified.</string>
+<string name="pair_connection_failed_hint">Connection failed. Check that the paired Price Tag PC is available.</string>
 </resources>

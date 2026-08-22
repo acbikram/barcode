@@ -177,6 +177,14 @@ fun SettingsScreen(
                     )
                     Spacer(Modifier.height(12.dp))
 
+                    GlassActionButton(
+                        label = stringResource(R.string.pair_price_tag_pc),
+                        supportingText = stringResource(R.string.pair_price_tag_pc_supporting),
+                        tone = GlassActionTone.Neutral,
+                        onClick = { expandedSection = null; navController.navigate(Screen.PairPriceTagPc.route) }
+                    )
+                    Spacer(Modifier.height(12.dp))
+
                     // WiFi pull
                     when (uiState.wifiCatalogState) {
                         SettingsViewModel.WifiCatalogState.IDLE,

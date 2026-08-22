@@ -271,4 +271,28 @@
     <string name="update_available_format">تحديث متاح: v%1$s</string>
     <string name="update_now_button">تحديث الآن</string>
     <string name="update_downloading_format">جاري التنزيل… %1$d%%</string>
+    <!-- اقتران جهاز Price Tag PC -->
+    <string name="pair_price_tag_pc">إقران مع جهاز Price Tag PC</string>
+    <string name="pair_price_tag_pc_supporting">امسح رمز QR لمرة واحدة الظاهر على جهاز Price Tag PC</string>
+    <string name="not_paired">غير مقترن</string>
+    <string name="pair_not_paired_hint">امسح رمز QR لمرة واحدة المعروض على جهاز Price Tag PC لإنشاء اتصال آمن.</string>
+    <string name="pair_scan_hint">وجّه الكاميرا إلى رمز QR الخاص بإقران جهاز Price Tag PC.</string>
+    <string name="pair_camera_permission_hint">يُستخدم إذن الكاميرا فقط لمسح رمز QR الخاص بإقران جهاز Price Tag PC.</string>
+    <string name="pairing">جارٍ الإقران</string>
+    <string name="pairing_waiting">جارٍ الاتصال الآمن بجهاز Price Tag PC…</string>
+    <string name="paired_with_format">مقترن مع %1$s</string>
+    <string name="testing">جارٍ الاختبار</string>
+    <string name="testing_waiting">جارٍ اختبار الاتصال الآمن…</string>
+    <string name="test_connection">اختبار الاتصال</string>
+    <string name="forget_this_pc">نسيان هذا الكمبيوتر</string>
+    <string name="confirm_pc_title">تأكيد جهاز Price Tag PC</string>
+    <string name="confirm_pc_message">أكد هذا الكمبيوتر قبل إنشاء اتصال آمن.</string>
+    <string name="connection_failed">فشل الاتصال</string>
+    <string name="qr_scan_ready">رمز QR جاهز للمسح</string>
+    <string name="uploading_csv">جارٍ رفع CSV</string>
+    <string name="pair_qr_invalid_or_expired">رمز QR غير صالح أو انتهت صلاحيته. امسح رمزًا جديدًا من جهاز Price Tag PC.</string>
+    <string name="pair_qr_expired">انتهت صلاحية رمز QR. امسح رمزًا جديدًا من جهاز Price Tag PC.</string>
+    <string name="pair_failed">تعذر إكمال الإقران. تحقق من جهاز Price Tag PC وامسح رمز QR جديدًا.</string>
+    <string name="pair_connection_verified">تم التحقق من الاتصال.</string>
+    <string name="pair_connection_failed_hint">فشل الاتصال. تحقق من توفر جهاز Price Tag PC المقترن.</string>
 </resources>

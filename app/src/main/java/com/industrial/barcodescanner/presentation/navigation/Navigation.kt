@@ -16,6 +16,7 @@ import com.industrial.barcodescanner.presentation.screens.wifihistory.WifiHistor
 import com.industrial.barcodescanner.presentation.screens.detail.DetailScreen
 import com.industrial.barcodescanner.presentation.screens.backup.BackupRestoreScreen
 import com.industrial.barcodescanner.presentation.screens.recyclebin.RecycleBinScreen
+import com.industrial.barcodescanner.presentation.screens.pairing.PairingScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -32,6 +33,7 @@ sealed class Screen(val route: String) {
     object BackupRestore : Screen("backup_restore")
     object RecycleBin : Screen("recycle_bin")
     object WifiHistory : Screen("wifi_history")
+    object PairPriceTagPc : Screen("pair_price_tag_pc")
 }
 
 @Composable
@@ -90,6 +92,9 @@ fun BarcodeToCsvNavHost(modifier: Modifier = Modifier) {
         }
         composable(Screen.WifiHistory.route) {
             WifiHistoryScreen(navController)
+        }
+        composable(Screen.PairPriceTagPc.route) {
+            PairingScreen(navController)
         }
     }
 }

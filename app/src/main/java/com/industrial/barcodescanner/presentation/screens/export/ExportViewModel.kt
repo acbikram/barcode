@@ -17,6 +17,7 @@ import com.industrial.barcodescanner.utils.WifiPc
 import com.industrial.barcodescanner.utils.WifiReprintBus
 import com.industrial.barcodescanner.utils.WifiSender
 import com.industrial.barcodescanner.utils.WifiTransferForegroundService
+import com.industrial.barcodescanner.utils.SecurePairingStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +41,7 @@ class ExportViewModel @Inject constructor(
     private val repository: ScannedItemRepository,
     private val historyRepository: WifiPrintHistoryRepository,
     private val preferencesManager: PreferencesManager,
+    private val pairingStore: SecurePairingStore,
     private val reprintBus: WifiReprintBus,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) : ViewModel() {
@@ -233,22 +235,39 @@ class ExportViewModel @Inject constructor(
         shareCsvViaWifi(csv)
     }
 
-    private fun validateHostPort(): Int? {
+    private data class WifiConnection(
+        val host: String,
+        val port: Int,
+        val deviceToken: String? = null
+    )
+
+    private fun selectedConnection(): WifiConnection? {
+        pairingStore.pairedPc()?.let { paired ->
+            return WifiConnection(paired.host, paired.port, paired.deviceToken)
+        }
         val host = _uiState.value.wifiHost.trim()
-        val portInt = _uiState.value.wifiPort.trim().toIntOrNull()
-        if (host.isBlank() || portInt == null || portInt !in 1..65535) {
+        val port = _uiState.value.wifiPort.trim().toIntOrNull()
+        return if (host.isNotBlank() && port != null && port in 1..65535) WifiConnection(host, port) else null
+    }
+
+    private fun validateHostPort(): Int? {
+        val connection = selectedConnection()
+        if (connection == null) {
             _uiState.update { it.copy(wifiInfo = "INVALID_INPUT") }
             return null
         }
-        return portInt
+        return connection.port
     }
 
     private fun launchShare(payloadProvider: suspend () -> ByteArray) {
-        val host = _uiState.value.wifiHost.trim()
-        val portInt = _uiState.value.wifiPort.trim().toIntOrNull() ?: return
+        val connection = selectedConnection() ?: return
         viewModelScope.launch {
-            preferencesManager.setWifiHost(host)
-            preferencesManager.setWifiPort(portInt.toString())
+            // Only legacy manual connections are persisted here. Paired records are
+            // stored separately in keystore-backed encrypted preferences.
+            if (connection.deviceToken == null) {
+                preferencesManager.setWifiHost(connection.host)
+                preferencesManager.setWifiPort(connection.port.toString())
+            }
             _uiState.update { it.copy(wifiSending = true, wifiInfo = null, wifiStage = "connecting") }
             // The socket exchange continues until the computer returns its result,
             // even if this activity is backgrounded or the phone is locked.
@@ -257,7 +276,7 @@ class ExportViewModel @Inject constructor(
                 var payload = withContext(Dispatchers.IO) { payloadProvider() }
                 var looping = true
                 while (looping) {
-                    when (val outcome = runWifiSession(host, portInt, payload)) {
+                    when (val outcome = runWifiSession(connection.host, connection.port, connection.deviceToken, payload)) {
                         is WifiOutcome.RetryWith -> {
                             payload = outcome.payload
                             _uiState.update { it.copy(wifiStage = "connecting") }
@@ -277,9 +296,13 @@ class ExportViewModel @Inject constructor(
         }
     }
 
-    private suspend fun runWifiSession(host: String, port: Int, payload: ByteArray): WifiOutcome =
-        withContext(Dispatchers.IO) {
-            WifiSender.Session(host, port).use { s ->
+    private suspend fun runWifiSession(
+        host: String,
+        port: Int,
+        deviceToken: String?,
+        payload: ByteArray
+    ): WifiOutcome = withContext(Dispatchers.IO) {
+            WifiSender.Session(host, port, deviceToken).use { s ->
                 s.sendCsv(payload)
                 _uiState.update { it.copy(wifiStage = "checking") }
                 WifiTransferForegroundService.update(context, WifiTransferForegroundService.STAGE_CHECKING)
@@ -430,6 +453,16 @@ class ExportViewModel @Inject constructor(
     fun consumeWifiInfo() = _uiState.update { it.copy(wifiInfo = null) }
 
     fun discoverPcs() {
+        pairingStore.pairedPc()?.let { paired ->
+            _uiState.update {
+                it.copy(
+                    discovering = false,
+                    discovered = listOf(WifiPc(paired.pcName, paired.host, paired.port)),
+                    wifiInfo = null
+                )
+            }
+            return
+        }
         viewModelScope.launch {
             _uiState.update { it.copy(discovering = true, discovered = emptyList()) }
             val pcs = withContext(Dispatchers.IO) {
@@ -446,17 +479,21 @@ class ExportViewModel @Inject constructor(
         _uiState.update { it.copy(wifiHost = pc.ip, wifiPort = pc.port.toString(), discovered = emptyList()) }
 
     fun testWifi() {
-        val host = _uiState.value.wifiHost.trim()
-        val portInt = _uiState.value.wifiPort.trim().toIntOrNull()
-        if (host.isBlank() || portInt == null || portInt !in 1..65535) {
+        val connection = selectedConnection()
+        if (connection == null) {
             _uiState.update { it.copy(wifiInfo = "INVALID_INPUT") }; return
         }
         viewModelScope.launch {
             _uiState.update { it.copy(testing = true) }
             val info = try {
-                val name = withContext(Dispatchers.IO) { WifiSender.ping(host, portInt) }
+                val name = withContext(Dispatchers.IO) {
+                    WifiSender.ping(connection.host, connection.port, connection.deviceToken)
+                }
                 "TEST_OK:$name"
-            } catch (e: Exception) { "TEST_FAIL:${e.message ?: "unreachable"}" }
+            } catch (_: Exception) {
+                // Never surface token, raw frame, or server-response details.
+                "TEST_FAIL:unreachable"
+            }
             _uiState.update { it.copy(testing = false, wifiInfo = info) }
         }
     }
