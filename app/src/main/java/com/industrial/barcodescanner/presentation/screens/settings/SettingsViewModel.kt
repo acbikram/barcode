@@ -12,6 +12,7 @@ import com.industrial.barcodescanner.utils.ApkInstaller
 import com.industrial.barcodescanner.utils.UpdateChecker
 import com.industrial.barcodescanner.utils.WifiDiscovery
 import com.industrial.barcodescanner.utils.WifiSender
+import com.industrial.barcodescanner.utils.SecurePairingStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +33,7 @@ class SettingsViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
     private val repository: ScannedItemRepository,
     private val catalogOpenHelper: ProductCatalogOpenHelper,
+    private val pairingStore: SecurePairingStore,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -120,15 +122,20 @@ class SettingsViewModel @Inject constructor(
                 it.copy(wifiCatalogState = WifiCatalogState.DISCOVERING,
                     wifiCatalogProgress = 0f, wifiCatalogStatus = "Searching for PC…")
             }
-            val pcs = withContext(Dispatchers.IO) { WifiDiscovery.discover(context, 2500) }
-            if (pcs.isEmpty()) {
-                _uiState.update {
-                    it.copy(wifiCatalogState = WifiCatalogState.ERROR,
-                        wifiCatalogStatus = "No PC found. Make sure Price Tag app is open with WiFi receiver enabled.")
+            val pairedPc = pairingStore.pairedPc()
+            val pc = if (pairedPc != null) {
+                com.industrial.barcodescanner.utils.WifiPc(pairedPc.pcName, pairedPc.host, pairedPc.port)
+            } else {
+                val pcs = withContext(Dispatchers.IO) { WifiDiscovery.discover(context, 2500) }
+                if (pcs.isEmpty()) {
+                    _uiState.update {
+                        it.copy(wifiCatalogState = WifiCatalogState.ERROR,
+                            wifiCatalogStatus = "No PC found. Make sure Price Tag app is open with WiFi receiver enabled.")
+                    }
+                    return@launch
                 }
-                return@launch
+                pcs.first()
             }
-            val pc = pcs.first()
             _uiState.update {
                 it.copy(wifiCatalogState = WifiCatalogState.DOWNLOADING,
                     wifiCatalogStatus = "Downloading catalog from ${pc.name}…")
@@ -137,7 +144,7 @@ class SettingsViewModel @Inject constructor(
                 val count = withContext(Dispatchers.IO) {
                     val tmp = File(context.cacheDir, "catalog_wifi_tmp.db")
                     val totalBytes = tmp.outputStream().use { sink ->
-                        WifiSender.pullCatalog(pc.ip, pc.port, sink)
+                        WifiSender.pullCatalog(pc.ip, pc.port, sink, pairedPc?.deviceToken)
                     }
                     val mb = totalBytes / 1_048_576.0
                     _uiState.update { s ->

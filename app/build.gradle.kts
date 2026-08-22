@@ -140,6 +140,8 @@ dependencies {
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
 
     implementation("androidx.datastore:datastore-preferences:1.1.0")
+    // Android Keystore-backed encrypted storage for the paired-PC token record.
+    implementation("androidx.security:security-crypto:1.1.0")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 

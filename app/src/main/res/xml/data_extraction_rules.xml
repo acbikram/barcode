@@ -3,6 +3,10 @@
     <cloud-backup>
         <include domain="database" path="."/>
         <include domain="sharedpref" path="."/>
+        <exclude domain="sharedpref" path="price_tag_pairing_preferences.xml"/>
         <include domain="file" path="."/>
     </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="price_tag_pairing_preferences.xml"/>
+    </device-transfer>
 </data-extraction-rules>
