@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -66,6 +68,7 @@ fun PairingScreen(
     viewModel: PairingViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsState()
     val cameraController = remember {
         LifecycleCameraController(context).apply {
@@ -78,6 +81,7 @@ fun PairingScreen(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         )
     }
+    var isCameraBound by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> hasCameraPermission = granted }
@@ -85,6 +89,26 @@ fun PairingScreen(
     LaunchedEffect(uiState.connectionState) {
         if (uiState.connectionState == PairingConnectionState.QR_SCAN_READY && !hasCameraPermission) {
             permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    // ScannerView installs the analyzer; binding here mirrors ScanScreen and
+    // guarantees the PreviewView receives a live camera stream after navigation.
+    LaunchedEffect(hasCameraPermission, uiState.connectionState, lifecycleOwner) {
+        val scanning = uiState.connectionState == PairingConnectionState.QR_SCAN_READY
+        if (scanning && hasCameraPermission && !isCameraBound) {
+            cameraController.cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            cameraController.bindToLifecycle(lifecycleOwner)
+            isCameraBound = true
+        } else if (!scanning && isCameraBound) {
+            cameraController.unbind()
+            isCameraBound = false
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            if (isCameraBound) cameraController.unbind()
         }
     }
 
