@@ -14,8 +14,8 @@ android {
         applicationId = "com.industrial.barcodescanner"
         minSdk = 29
         targetSdk = 34
-        versionCode = 21
-        versionName = "2.1.0"
+        versionCode = 22
+        versionName = "2.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
