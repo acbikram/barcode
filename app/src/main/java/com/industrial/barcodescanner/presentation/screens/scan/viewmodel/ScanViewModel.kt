@@ -87,12 +87,15 @@ class ScanViewModel @Inject constructor(
         val lastUnitType: String = "PCS"
     )
 
+    // Start observing immediately. The selector is opened directly from a scan,
+    // so WhileSubscribed would leave the StateFlow at its fallback values until
+    // after a collector appeared and could incorrectly preselect A4.
     private val scanPreferences: StateFlow<ScanPreferences> = combine(
         preferencesManager.lastTagTypeFlow,
         preferencesManager.lastUnitTypeFlow
     ) { lastTagType, lastUnitType ->
         ScanPreferences(lastTagType, lastUnitType)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ScanPreferences())
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, ScanPreferences())
 
     /** Top-20 most recently scanned items, ordered and limited by Room. */
     val recentScans: StateFlow<List<ScannedItem>> = repository.getRecentItems(20)
