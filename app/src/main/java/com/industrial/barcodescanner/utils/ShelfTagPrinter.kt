@@ -1,10 +1,12 @@
 package com.industrial.barcodescanner.utils
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import java.io.OutputStream
 import java.util.UUID
 
+@SuppressLint("MissingPermission")
 class ShelfTagPrinter {
     private val sppUuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
