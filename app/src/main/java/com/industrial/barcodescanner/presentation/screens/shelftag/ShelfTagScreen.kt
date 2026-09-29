@@ -87,12 +87,6 @@ fun ShelfTagScreen(navController: NavController, viewModel: ShelfTagViewModel = 
     val lifecycleOwner = LocalLifecycleOwner.current
     val keyboard = LocalSoftwareKeyboardController.current
     var cameraMode by remember { mutableStateOf(false) }
-    val cameraController = remember {
-        LifecycleCameraController(context).apply {
-            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-            setEnabledUseCases(CameraController.IMAGE_ANALYSIS)
-        }
-    }
     val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> cameraMode = granted }
     var showSetup by remember { mutableStateOf(false) }
     val bluetoothPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { showSetup = true }
@@ -100,12 +94,6 @@ fun ShelfTagScreen(navController: NavController, viewModel: ShelfTagViewModel = 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
             bluetoothPermission.launch(Manifest.permission.BLUETOOTH_CONNECT)
         } else showSetup = true
-    }
-    LaunchedEffect(cameraMode, lifecycleOwner) {
-        if (cameraMode) cameraController.bindToLifecycle(lifecycleOwner) else cameraController.unbind()
-    }
-    DisposableEffect(Unit) {
-        onDispose { cameraController.unbind() }
     }
     LaunchedEffect(state.message, state.error) {
         (state.message ?: state.error)?.let { snackbar.showSnackbar(it); viewModel.clearMessage() }
@@ -149,6 +137,14 @@ fun ShelfTagScreen(navController: NavController, viewModel: ShelfTagViewModel = 
                     Button(onClick = { keyboard?.hide(); viewModel.lookup() }, enabled = !state.loading) { Text("Get Price") }
                 }
                 if (cameraMode) {
+                    val cameraController = remember {
+                        LifecycleCameraController(context).apply {
+                            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                            setEnabledUseCases(CameraController.IMAGE_ANALYSIS)
+                        }
+                    }
+                    LaunchedEffect(cameraController, lifecycleOwner) { cameraController.bindToLifecycle(lifecycleOwner) }
+                    DisposableEffect(cameraController) { onDispose { cameraController.unbind() } }
                     Spacer(Modifier.height(8.dp))
                     ScannerView(
                         cameraController = cameraController,
