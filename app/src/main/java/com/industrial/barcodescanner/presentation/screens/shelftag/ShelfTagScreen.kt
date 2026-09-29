@@ -3,6 +3,7 @@
 package com.industrial.barcodescanner.presentation.screens.shelftag
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -190,6 +191,7 @@ fun ShelfTagScreen(navController: NavController, viewModel: ShelfTagViewModel = 
 @Composable private fun PairLine(label: String, value: String) { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text(label, color = Color.LightGray); Text(value, fontWeight = FontWeight.Bold) } }
 @Composable private fun PriceLine(label: String, uom: String, price: String, currency: String) { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("$label: $uom"); Text("$price $currency", fontWeight = FontWeight.Bold, color = GreenAccent) } }
 
+@SuppressLint("MissingPermission")
 @Composable private fun ShelfTagSetupDialog(state: ShelfTagViewModel.UiState, vm: ShelfTagViewModel, onDismiss: () -> Unit) {
     var expandedMode by remember { mutableStateOf(false) }; var expandedModel by remember { mutableStateOf(false) }
     val devices = remember(state.printerModel) { runCatching { ShelfTagPrinter().pairedPrinters(state.printerModel) }.getOrDefault(emptyList()) }
