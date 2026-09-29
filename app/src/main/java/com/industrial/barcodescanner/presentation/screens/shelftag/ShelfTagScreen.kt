@@ -59,7 +59,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -84,7 +83,6 @@ fun ShelfTagScreen(navController: NavController, viewModel: ShelfTagViewModel = 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val keyboard = LocalSoftwareKeyboardController.current
     var cameraMode by remember { mutableStateOf(false) }
     val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> cameraMode = granted }
@@ -137,6 +135,7 @@ fun ShelfTagScreen(navController: NavController, viewModel: ShelfTagViewModel = 
                     Button(onClick = { keyboard?.hide(); viewModel.lookup() }, enabled = !state.loading) { Text("Get Price") }
                 }
                 if (cameraMode) {
+                    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
                     val cameraController = remember {
                         LifecycleCameraController(context).apply {
                             cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA

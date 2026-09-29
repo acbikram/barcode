@@ -1,7 +1,6 @@
 package com.industrial.barcodescanner.presentation
 
 import android.os.Bundle
-import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -11,7 +10,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.setContent
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.industrial.barcodescanner.presentation.components.FirstLaunchLanguageDialog
 import com.industrial.barcodescanner.presentation.components.FirstLaunchThemeDialog
 import com.industrial.barcodescanner.presentation.navigation.BarcodeToCsvNavHost
@@ -38,7 +42,13 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        setContent {
+        val composeRoot = ComposeView(this).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setViewTreeLifecycleOwner(this@MainActivity)
+            setViewTreeSavedStateRegistryOwner(this@MainActivity)
+        }
+        setContentView(composeRoot)
+        composeRoot.setContent {
             val themeMode by preferencesManager.themeModeFlow.collectAsState(initial = "dark")
             val useDarkTheme = when (themeMode) {
                 "light" -> false
