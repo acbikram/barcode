@@ -27,6 +27,32 @@ class PreferencesManager @Inject constructor(@ApplicationContext private val con
     private val lastBatchCsvKey = stringPreferencesKey("last_batch_csv")
     private val themeModeKey = stringPreferencesKey("theme_mode")
     private val notificationPermissionPromptShownKey = booleanPreferencesKey("notification_permission_prompt_shown")
+    private val shelfTagHostKey = stringPreferencesKey("shelf_tag_host")
+    private val shelfTagPortKey = stringPreferencesKey("shelf_tag_port")
+    private val shelfTagModeKey = stringPreferencesKey("shelf_tag_mode")
+    private val shelfTagPrinterModelKey = stringPreferencesKey("shelf_tag_printer_model")
+    private val shelfTagPrinterNameKey = stringPreferencesKey("shelf_tag_printer_name")
+    private val shelfTagPrinterAddressKey = stringPreferencesKey("shelf_tag_printer_address")
+    private val shelfTagMediaKey = stringPreferencesKey("shelf_tag_media")
+    private val shelfTagLabelSizeKey = stringPreferencesKey("shelf_tag_label_size")
+    private val shelfTagCopiesKey = stringPreferencesKey("shelf_tag_copies")
+    private val shelfTagArabicKey = booleanPreferencesKey("shelf_tag_arabic")
+    private val shelfTagCalibrateKey = booleanPreferencesKey("shelf_tag_calibrate")
+
+    data class ShelfTagSettings(
+        val host: String, val port: String, val mode: String, val printerModel: String,
+        val printerName: String, val printerAddress: String, val media: String,
+        val labelSize: String, val copies: String, val arabic: Boolean, val calibrate: Boolean
+    )
+
+    val shelfTagSettingsFlow: Flow<ShelfTagSettings> = context.dataStore.data.map { p ->
+        ShelfTagSettings(
+            p[shelfTagHostKey] ?: "192.168.1.1", p[shelfTagPortKey] ?: "11000", p[shelfTagModeKey] ?: "Socket",
+            p[shelfTagPrinterModelKey] ?: "Zebra", p[shelfTagPrinterNameKey] ?: "", p[shelfTagPrinterAddressKey] ?: "",
+            p[shelfTagMediaKey] ?: "Label With Gaps", p[shelfTagLabelSizeKey] ?: "4.13 X 2 Inch",
+            p[shelfTagCopiesKey] ?: "1", p[shelfTagArabicKey] ?: true, p[shelfTagCalibrateKey] ?: false
+        )
+    }
 
     /** One of dark, light, or system. Defaults to the original dark appearance. */
     val themeModeFlow: Flow<String> = context.dataStore.data.map { prefs ->
@@ -121,6 +147,20 @@ class PreferencesManager @Inject constructor(@ApplicationContext private val con
     /** Stores the most recently sent batch CSV so it can be re-sent later. */
     suspend fun setLastBatchCsv(csv: String) {
         context.dataStore.edit { prefs -> prefs[lastBatchCsvKey] = csv }
+    }
+
+    suspend fun saveShelfTagSettings(
+        host: String, port: String, mode: String, printerModel: String, printerName: String,
+        printerAddress: String, media: String, labelSize: String, copies: String,
+        arabic: Boolean, calibrate: Boolean
+    ) {
+        context.dataStore.edit { p ->
+            p[shelfTagHostKey] = host; p[shelfTagPortKey] = port; p[shelfTagModeKey] = mode
+            p[shelfTagPrinterModelKey] = printerModel; p[shelfTagPrinterNameKey] = printerName
+            p[shelfTagPrinterAddressKey] = printerAddress; p[shelfTagMediaKey] = media
+            p[shelfTagLabelSizeKey] = labelSize; p[shelfTagCopiesKey] = copies
+            p[shelfTagArabicKey] = arabic; p[shelfTagCalibrateKey] = calibrate
+        }
     }
 
 }

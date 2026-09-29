@@ -36,6 +36,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -117,6 +119,18 @@ fun HomeScreen(
                 .padding(horizontal = AppDimens.ScreenPadding)
         ) {
             Column(modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Shelf Tag", style = MaterialTheme.typography.labelMedium, color = OrangeAccent)
+                    Switch(
+                        checked = false,
+                        onCheckedChange = { if (it) navController.navigate(Screen.ShelfTag.route) },
+                        colors = SwitchDefaults.colors(checkedThumbColor = GreenAccent, checkedTrackColor = GreenAccent.copy(alpha = 0.4f))
+                    )
+                }
                 Text(
                     text = stringResource(R.string.app_title_header),
                     style = MaterialTheme.typography.headlineMedium.copy(
