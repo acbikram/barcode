@@ -1,0 +1,36 @@
+name: Android PR Validation
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches:
+      - "uiux/**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Validate database migrations
+        run: python3 tools/verify_migrations.py
+
+      - name: Run lint and unit tests
+        run: ./gradlew lintDebug testDebugUnitTest --no-daemon --max-workers=1 --stacktrace
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon --max-workers=1 --stacktrace
