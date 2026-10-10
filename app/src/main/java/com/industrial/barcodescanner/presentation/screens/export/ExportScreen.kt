@@ -55,6 +55,7 @@ fun ExportScreen(
     val scope = rememberCoroutineScope()
     var showWifiDialog by remember { mutableStateOf(false) }
     var showResendWarning by remember { mutableStateOf(false) }
+    var showUnknownPrintResult by remember { mutableStateOf(false) }
     val exportSuccessMsg = stringResource(R.string.export_successful)
     val shareCsvLabel = stringResource(R.string.share_csv)
 
@@ -673,6 +674,26 @@ fun ExportScreen(
         )
     }
 
+    if (showUnknownPrintResult) {
+        AlertDialog(
+            onDismissRequest = { showUnknownPrintResult = false },
+            icon = { Icon(Icons.Default.Wifi, contentDescription = null) },
+            title = { Text(stringResource(R.string.wifi_status_unknown)) },
+            text = { Text(stringResource(R.string.wifi_unknown_inspect_history_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showUnknownPrintResult = false
+                    navController.navigate(Screen.WifiHistory.route) { launchSingleTop = true }
+                }) { Text(stringResource(R.string.wifi_unknown_open_history)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUnknownPrintResult = false }) {
+                    Text(stringResource(R.string.done))
+                }
+            }
+        )
+    }
+
     // ── Share WiFi result → snackbar ─────────────────────────────────────────
     uiState.wifiInfo?.let { info ->
         val msg = when {
@@ -703,9 +724,14 @@ fun ExportScreen(
             else -> info
         }
         LaunchedEffect(info) {
-            scope.launch {
-                snackbarHostState.showSnackbar(msg)
+            if (info == "UNKNOWN") {
+                showUnknownPrintResult = true
                 viewModel.consumeWifiInfo()
+            } else {
+                scope.launch {
+                    snackbarHostState.showSnackbar(msg)
+                    viewModel.consumeWifiInfo()
+                }
             }
         }
     }
