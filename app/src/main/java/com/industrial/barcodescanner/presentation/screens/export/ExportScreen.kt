@@ -54,6 +54,7 @@ fun ExportScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showWifiDialog by remember { mutableStateOf(false) }
+    var showResendWarning by remember { mutableStateOf(false) }
     val exportSuccessMsg = stringResource(R.string.export_successful)
     val shareCsvLabel = stringResource(R.string.share_csv)
 
@@ -325,7 +326,7 @@ fun ExportScreen(
                         }
 
                         OutlinedButton(
-                            onClick = { viewModel.resendLastBatch() },
+                            onClick = { showResendWarning = true },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = uiState.hasLastBatch && !uiState.wifiSending && !uiState.isExporting
                         ) {
@@ -653,6 +654,25 @@ fun ExportScreen(
         )
     }
 
+    if (showResendWarning) {
+        AlertDialog(
+            onDismissRequest = { showResendWarning = false },
+            title = { Text(stringResource(R.string.wifi_resend_confirm_title)) },
+            text = { Text(stringResource(R.string.wifi_resend_confirm_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showResendWarning = false
+                    viewModel.resendLastBatch()
+                }) { Text(stringResource(R.string.wifi_resend_confirm_action)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResendWarning = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
     // ── Share WiFi result → snackbar ─────────────────────────────────────────
     uiState.wifiInfo?.let { info ->
         val msg = when {
@@ -665,7 +685,7 @@ fun ExportScreen(
             info == "EMPTY" -> stringResource(R.string.wifi_empty)
             info == "BUSY" -> stringResource(R.string.wifi_busy)
             info == "CANCELLED" -> stringResource(R.string.wifi_cancelled)
-            info == "DONE_CLOSED" -> stringResource(R.string.wifi_done)
+            info == "UNKNOWN" -> stringResource(R.string.wifi_status_unknown)
             info.startsWith("PRINTED_DONE:") ->
                 stringResource(R.string.wifi_printed_rest_cancelled_format,
                     info.removePrefix("PRINTED_DONE:").toIntOrNull() ?: 0)
