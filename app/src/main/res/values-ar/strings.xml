@@ -93,6 +93,10 @@
     <string name="wifi_busy">الكمبيوتر مشغول — حاول مرة أخرى بعد قليل</string>
     <string name="wifi_cancelled">تم الإلغاء — لم تتم الطباعة</string>
     <string name="wifi_done">تم</string>
+    <string name="wifi_status_unknown">حالة الطباعة غير معروفة. تحقق من الكمبيوتر والطابعة قبل إعادة المحاولة؛ فقد تؤدي إعادة الإرسال إلى طباعة بطاقات مكررة.</string>
+    <string name="wifi_resend_confirm_title">هل تريد إعادة إرسال الدفعة الأخيرة؟</string>
+    <string name="wifi_resend_confirm_message">ربما طبع الكمبيوتر بعض هذه الدفعة أو كلها بالفعل. تحقق أولاً من الطابعة وسجل الطباعة على الكمبيوتر. قد تؤدي إعادة الإرسال إلى بطاقات مكررة.</string>
+    <string name="wifi_resend_confirm_action">إعادة الإرسال على أي حال</string>
     <string name="wifi_printed_format">تمت طباعة %1$d صنف</string>
     <string name="wifi_printed_rest_cancelled_format">تمت طباعة %1$d صنف؛ وتم إلغاء الباقي</string>
     <string name="wifi_find_pcs">🔍 البحث عن أجهزة في الشبكة</string>
