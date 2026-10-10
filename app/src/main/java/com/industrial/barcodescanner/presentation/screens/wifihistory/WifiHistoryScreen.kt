@@ -70,6 +70,13 @@ fun WifiHistoryScreen(
     val range by viewModel.range.collectAsState()
     val totals by viewModel.totals.collectAsState()
     var showClear by remember { mutableStateOf(false) }
+    var showReprintWarning by remember { mutableStateOf(false) }
+    var pendingReprintAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    fun requestReprint(action: () -> Unit) {
+        pendingReprintAction = action
+        showReprintWarning = true
+    }
 
     // Reprint actions stash a CSV then jump to Export, which sends it.
     fun goExport() {
@@ -161,12 +168,12 @@ fun WifiHistoryScreen(
                             timestamp = group.timestamp,
                             sheetCount = group.sheets.size,
                             failedCount = group.failed.size,
-                            onReprintJob = { viewModel.reprintJob(group); goExport() },
-                            onRetryFailed = { viewModel.retryFailed(group); goExport() },
+                            onReprintJob = { requestReprint { viewModel.reprintJob(group); goExport() } },
+                            onRetryFailed = { requestReprint { viewModel.retryFailed(group); goExport() } },
                             onDeleteJob = { viewModel.deleteJob(group.jobId) }
                         ) {
                             group.sheets.forEach { sheet ->
-                                SheetRow(sheet = sheet, onReprint = { viewModel.reprintSheet(sheet); goExport() })
+                                SheetRow(sheet = sheet, onReprint = { requestReprint { viewModel.reprintSheet(sheet); goExport() } })
                             }
                             if (group.failed.isNotEmpty()) {
                                 FailedSection(group.failed)
@@ -176,6 +183,31 @@ fun WifiHistoryScreen(
                 }
             }
         }
+    }
+
+    if (showReprintWarning) {
+        AlertDialog(
+            onDismissRequest = {
+                showReprintWarning = false
+                pendingReprintAction = null
+            },
+            title = { Text(stringResource(R.string.wifi_history_reprint_confirm_title)) },
+            text = { Text(stringResource(R.string.wifi_history_reprint_confirm_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val action = pendingReprintAction
+                    pendingReprintAction = null
+                    showReprintWarning = false
+                    action?.invoke()
+                }) { Text(stringResource(R.string.wifi_history_reprint_confirm_action)) }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showReprintWarning = false
+                    pendingReprintAction = null
+                }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
     }
 
     if (showClear) {
