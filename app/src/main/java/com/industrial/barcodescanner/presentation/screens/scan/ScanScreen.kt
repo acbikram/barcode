@@ -61,8 +61,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-private const val CAMERA_AREA_WEIGHT = 0.17f
-private const val LIST_AREA_WEIGHT   = 0.83f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,6 +84,8 @@ fun ScanScreen(
     val uiState by viewModel.uiState.collectAsState()
     val recentScans by viewModel.recentScans.collectAsState()
     val scannerInactive = uiState.scannerInactive
+    val cameraAreaWeight = if (uiState.showManualMode) 0.38f else 0.22f
+    val listAreaWeight = 1f - cameraAreaWeight
 
     val cameraPermissionDeniedMsg = stringResource(R.string.camera_permission_required)
     val failedToStartCameraFormat = stringResource(R.string.failed_to_start_camera_format)
@@ -238,7 +238,7 @@ fun ScanScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(CAMERA_AREA_WEIGHT)
+                    .weight(cameraAreaWeight)
                     .background(Color.Black)
             ) {
                 when {
@@ -319,7 +319,7 @@ fun ScanScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(LIST_AREA_WEIGHT)
+                    .weight(listAreaWeight)
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp)
