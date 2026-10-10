@@ -306,11 +306,12 @@ class ExportViewModel @Inject constructor(
                 s.sendCsv(payload)
                 _uiState.update { it.copy(wifiStage = "checking") }
                 WifiTransferForegroundService.update(context, WifiTransferForegroundService.STAGE_CHECKING)
-                while (true) {
-                    val msg = s.readMessage() ?: return@use WifiOutcome.Finished("DONE_CLOSED")
+                try {
+                    while (true) {
+                    val msg = s.readMessage() ?: return@use WifiOutcome.Finished("UNKNOWN")
                     when (msg.optString("type")) {
                         "busy"  -> return@use WifiOutcome.Finished("BUSY")
-                        "error" -> return@use WifiOutcome.Finished("FAILED:${msg.optString("message")}")
+                        "error" -> return@use WifiOutcome.Finished("UNKNOWN")
                         "result" -> {
                             val ready = msg.optInt("ready", 0)
                             val failed = parseFailed(msg)
@@ -339,7 +340,12 @@ class ExportViewModel @Inject constructor(
                                 else WifiOutcome.Finished("CANCELLED")
                             }
                         }
-                        "done" -> return@use WifiOutcome.Finished("PRINTED:${msg.optInt("printed", 0)}")
+                        "done" -> {
+                            // A final success acknowledgement is the only point at
+                            // which it is safe to clear the quick-resend copy.
+                            preferencesManager.setLastBatchCsv("")
+                            return@use WifiOutcome.Finished("PRINTED:${msg.optInt("printed", 0)}")
+                        }
                         "printed" -> {
                             val printed = msg.optInt("printed", 0)
                             val failedSheets = msg.optInt("failed_sheets", 0)
@@ -360,6 +366,9 @@ class ExportViewModel @Inject constructor(
                                 }
                             } else {
                                 recordWifiHistory(msg)
+                                if (failed.isEmpty()) {
+                                    preferencesManager.setLastBatchCsv("")
+                                }
                                 return@use itemRetryOutcome(printed, failed, retryCsv)
                             }
                         }
@@ -374,8 +383,16 @@ class ExportViewModel @Inject constructor(
                         else -> {}
                     }
                 }
-                @Suppress("UNREACHABLE_CODE")
-                WifiOutcome.Finished("DONE_CLOSED")
+                    @Suppress("UNREACHABLE_CODE")
+                    WifiOutcome.Finished("UNKNOWN")
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    // The CSV has already been sent. If the connection fails now,
+                    // the PC may have printed before its final acknowledgement was lost.
+                    // Never label this as success or automatically resend it.
+                    WifiOutcome.Finished("UNKNOWN")
+                }
             }
         }
 

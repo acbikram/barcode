@@ -93,6 +93,10 @@
     <string name="wifi_busy">PC is busy — try again shortly</string>
     <string name="wifi_cancelled">Cancelled — nothing printed</string>
     <string name="wifi_done">Done</string>
+    <string name="wifi_status_unknown">Print status unknown. Check the PC and printer before retrying; resending may print duplicate tags.</string>
+    <string name="wifi_resend_confirm_title">Resend last batch?</string>
+    <string name="wifi_resend_confirm_message">The PC may already have printed some or all of this batch. Check the printer and PC print history first. Resending can create duplicate tags.</string>
+    <string name="wifi_resend_confirm_action">Resend anyway</string>
     <string name="wifi_printed_format">Printed %1$d item(s)</string>
     <string name="wifi_printed_rest_cancelled_format">Printed %1$d item(s); the rest were cancelled</string>
     <string name="wifi_find_pcs">🔍 Find PCs on network</string>
