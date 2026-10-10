@@ -97,6 +97,11 @@
     <string name="wifi_resend_confirm_title">Resend last batch?</string>
     <string name="wifi_resend_confirm_message">The PC may already have printed some or all of this batch. Check the printer and PC print history first. Resending can create duplicate tags.</string>
     <string name="wifi_resend_confirm_action">Resend anyway</string>
+    <string name="wifi_history_reprint_confirm_title">Confirm reprint</string>
+    <string name="wifi_history_reprint_confirm_message">This will send the selected job to the PC again. If the previous print may have succeeded, duplicate tags could be produced. Continue only after checking the printer and PC history.</string>
+    <string name="wifi_history_reprint_confirm_action">Continue to reprint</string>
+    <string name="wifi_unknown_inspect_history_message">The connection ended before a final print result was confirmed. Do not resend yet. Check the PC and Wi-Fi print history first.</string>
+    <string name="wifi_unknown_open_history">Open print history</string>
     <string name="wifi_printed_format">Printed %1$d item(s)</string>
     <string name="wifi_printed_rest_cancelled_format">Printed %1$d item(s); the rest were cancelled</string>
     <string name="wifi_find_pcs">🔍 Find PCs on network</string>
