@@ -385,6 +385,8 @@ class ExportViewModel @Inject constructor(
                 }
                     @Suppress("UNREACHABLE_CODE")
                     WifiOutcome.Finished("UNKNOWN")
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    throw cancelled
                 } catch (_: Exception) {
                     // The CSV has already been sent. If the connection fails now,
                     // the PC may have printed before its final acknowledgement was lost.
