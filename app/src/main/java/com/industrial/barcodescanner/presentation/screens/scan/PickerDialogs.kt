@@ -1,6 +1,9 @@
 package com.industrial.barcodescanner.presentation.screens.scan
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,7 +19,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.industrial.barcodescanner.R
-import com.industrial.barcodescanner.presentation.screens.scan.components.SingleWheelBox
 import com.industrial.barcodescanner.presentation.theme.CyanAccent
 import com.industrial.barcodescanner.presentation.theme.SubtleGray
 import com.industrial.barcodescanner.presentation.theme.SurfaceDark
@@ -107,16 +109,62 @@ fun AutoAdvanceWheelDialog(
                     )
                 }
 
-                SingleWheelBox(
-                    items = items,
-                    selectedIndex = selectedIndex,
-                    onSelectionChange = { idx -> selectedIndex = idx },
-                    onInteractingChange = { interacting ->
-                        isInteracting = interacting
-                        secondsLeft = autoAdvanceSeconds
-                    },
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+                // Large, explicit choices are easier to tap than a small wheel,
+                // especially on phones used one-handed on the shop floor.
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 300.dp)
+                        .verticalScroll(rememberScrollState())
+                        .padding(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    items.forEachIndexed { index, item ->
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedIndex = index
+                                    secondsLeft = autoAdvanceSeconds
+                                    isInteracting = false
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (selectedIndex == index)
+                                CyanAccent.copy(alpha = 0.16f)
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant,
+                            border = if (selectedIndex == index)
+                                androidx.compose.foundation.BorderStroke(1.dp, CyanAccent)
+                            else null
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 9.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = item,
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        color = if (selectedIndex == index) CyanAccent
+                                        else MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = if (selectedIndex == index) FontWeight.Bold
+                                        else FontWeight.Medium
+                                    )
+                                )
+                                RadioButton(
+                                    selected = selectedIndex == index,
+                                    onClick = {
+                                        selectedIndex = index
+                                        secondsLeft = autoAdvanceSeconds
+                                        isInteracting = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
 
                 Spacer(Modifier.height(8.dp))
 
