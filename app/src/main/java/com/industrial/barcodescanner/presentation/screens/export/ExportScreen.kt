@@ -707,6 +707,15 @@ fun ExportScreen(
             info == "BUSY" -> stringResource(R.string.wifi_busy)
             info == "CANCELLED" -> stringResource(R.string.wifi_cancelled)
             info == "UNKNOWN" -> stringResource(R.string.wifi_status_unknown)
+            info.startsWith("PARTIAL:") -> {
+                val counts = info.removePrefix("PARTIAL:").split(":")
+                stringResource(
+                    R.string.wifi_print_partial_format,
+                    counts.getOrNull(0)?.toIntOrNull() ?: 0,
+                    counts.getOrNull(1)?.toIntOrNull() ?: 0,
+                    counts.getOrNull(2)?.toIntOrNull() ?: 0
+                )
+            }
             info.startsWith("PRINTED_DONE:") ->
                 stringResource(R.string.wifi_printed_rest_cancelled_format,
                     info.removePrefix("PRINTED_DONE:").toIntOrNull() ?: 0)
