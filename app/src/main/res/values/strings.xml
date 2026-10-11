@@ -104,6 +104,7 @@
     <string name="wifi_unknown_open_history">Open print history</string>
     <string name="wifi_printed_format">Printed %1$d item(s)</string>
     <string name="wifi_printed_rest_cancelled_format">Printed %1$d item(s); the rest were cancelled</string>
+    <string name="wifi_print_partial_format">Print result: %1$d item(s) printed, %2$d sheet(s) failed, %3$d item(s) failed or not printed.</string>
     <string name="wifi_find_pcs">🔍 Find PCs on network</string>
     <string name="wifi_searching">Searching…</string>
     <string name="wifi_test">Test connection</string>
