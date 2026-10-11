@@ -75,7 +75,7 @@ jobs:
         tag_name: ${{ steps.version.outputs.tag }}
         name: "Barcode To CSV ${{ steps.version.outputs.tag }}"
         body: |
-          Barcode To CSV v${{ steps.version.outputs.name }} adds Near Expiry-inspired first-launch appearance onboarding with persisted dark, light, and system choices, alongside rolling recovery backups and clear add-or-replace duplicate controls. The verified Android 16 startup and 16 KB native-library safeguards remain enabled.
+          Barcode To CSV v${{ steps.version.outputs.name }} improves Wi-Fi print status reporting by waiting for the PC's final print acknowledgement and showing partial results when sheets/items fail or are skipped. The matching Windows Price Tag PC receiver must be updated to v2.9.1 for the final acknowledgement protocol. Existing scanning, catalog, backup, and Android 16 / 16 KB native-library safeguards remain enabled.
 
           Choose the APK matching your phone: arm64-v8a for nearly all modern Android phones, or armeabi-v7a for older 32-bit devices. Each APK is smaller because it carries only its own native scanner libraries.
 
