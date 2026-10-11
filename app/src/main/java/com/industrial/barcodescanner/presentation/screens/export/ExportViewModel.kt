@@ -374,8 +374,14 @@ class ExportViewModel @Inject constructor(
                                 if (failed.isNotEmpty()) {
                                     return@use itemRetryOutcome(printed, failed, retryCsv)
                                 }
-                                // "printed" is an intermediate progress/result message from the PC.
-                                // Wait for its explicit final "done" acknowledgement before reporting success.
+                                // A "printed" message with zero failed sheets/items is already a
+                                // terminal success: the PC has finished its print attempt and has
+                                // no further decision to request. Treat it as final for older PC
+                                // receiver versions that close the socket without sending "done".
+                                // Newer receivers may still send "done", but waiting for it is not
+                                // necessary and can produce a false "Print Status Unknown".
+                                preferencesManager.setLastBatchCsv("")
+                                return@use WifiOutcome.Finished("PRINTED:$printed")
                             }
                         }
                         "cancelled" -> return@use WifiOutcome.Finished("CANCELLED")
