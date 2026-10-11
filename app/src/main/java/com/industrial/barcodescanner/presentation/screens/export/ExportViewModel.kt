@@ -341,10 +341,15 @@ class ExportViewModel @Inject constructor(
                             }
                         }
                         "done" -> {
-                            // A final success acknowledgement is the only point at
-                            // which it is safe to clear the quick-resend copy.
+                            // Only the PC's final acknowledgement confirms its print workflow ended.
+                            val printed = msg.optInt("printed", 0)
+                            val failedSheets = msg.optInt("failed_sheets", 0)
+                            val failedItems = msg.optInt("failed_items", 0)
+                            if (failedSheets > 0 || failedItems > 0) {
+                                return@use WifiOutcome.Finished("PARTIAL:$printed:$failedSheets:$failedItems")
+                            }
                             preferencesManager.setLastBatchCsv("")
-                            return@use WifiOutcome.Finished("PRINTED:${msg.optInt("printed", 0)}")
+                            return@use WifiOutcome.Finished("PRINTED:$printed")
                         }
                         "printed" -> {
                             val printed = msg.optInt("printed", 0)
@@ -362,14 +367,15 @@ class ExportViewModel @Inject constructor(
                                 } else {
                                     s.sendDecision("skip")
                                     recordWifiHistory(msg)
-                                    return@use itemRetryOutcome(printed, failed, retryCsv)
+                                    return@use WifiOutcome.Finished("PARTIAL:$printed:$failedSheets:${failed.size}")
                                 }
                             } else {
                                 recordWifiHistory(msg)
-                                if (failed.isEmpty()) {
-                                    preferencesManager.setLastBatchCsv("")
+                                if (failed.isNotEmpty()) {
+                                    return@use itemRetryOutcome(printed, failed, retryCsv)
                                 }
-                                return@use itemRetryOutcome(printed, failed, retryCsv)
+                                // "printed" is an intermediate progress/result message from the PC.
+                                // Wait for its explicit final "done" acknowledgement before reporting success.
                             }
                         }
                         "cancelled" -> return@use WifiOutcome.Finished("CANCELLED")
@@ -450,7 +456,7 @@ class ExportViewModel @Inject constructor(
         if (failed.isEmpty()) return WifiOutcome.Finished("PRINTED:$printed")
         val choice = askDecision(WifiDecisionRequest(WifiDecisionKind.RetryLeft(printed), failed))
         return if (choice == "retry") WifiOutcome.RetryWith(WifiSender.csvBytesFromText(retryCsv))
-        else WifiOutcome.Finished("PRINTED_DONE:$printed")
+        else WifiOutcome.Finished("PARTIAL:$printed:0:${failed.size}")
     }
 
     private suspend fun askDecision(req: WifiDecisionRequest): String {
