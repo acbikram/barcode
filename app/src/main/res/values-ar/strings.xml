@@ -104,6 +104,7 @@
     <string name="wifi_unknown_open_history">فتح سجل الطباعة</string>
     <string name="wifi_printed_format">تمت طباعة %1$d صنف</string>
     <string name="wifi_printed_rest_cancelled_format">تمت طباعة %1$d صنف؛ وتم إلغاء الباقي</string>
+    <string name="wifi_print_partial_format">نتيجة الطباعة: تمت طباعة %1$d صنف، وفشل %2$d ورقة، ولم تتم طباعة %3$d صنف.</string>
     <string name="wifi_find_pcs">🔍 البحث عن أجهزة في الشبكة</string>
     <string name="wifi_searching">جارٍ البحث…</string>
     <string name="wifi_test">اختبار الاتصال</string>
